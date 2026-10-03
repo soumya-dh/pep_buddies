@@ -171,15 +171,38 @@ PRESETS = {
 # -------------------------------------------------------------
 st.sidebar.image("https://raw.githubusercontent.com/soumya-dh/pep_buddies/main/figures/quantitative_metrics_validation.png", use_container_width=True, caption="Model Interpretability Validation")
 st.sidebar.title("🧬 Demonstration Panel")
-st.sidebar.markdown("Quickly test prospective neoantigens or input custom candidate sequences.")
+# Synchronize session state with preset dropdown selection
+if "current_preset" not in st.session_state:
+    st.session_state.current_preset = list(PRESETS.keys())[0]
+    st.session_state.pep_input_box = PRESETS[st.session_state.current_preset]["sequence"]
+    st.session_state.allele_selector = PRESETS[st.session_state.current_preset]["allele"]
 
-selected_preset = st.sidebar.selectbox("Choose a Pre-loaded Example:", list(PRESETS.keys()), index=0)
+def handle_preset_change():
+    preset = st.session_state.preset_dropdown
+    seq = PRESETS[preset]["sequence"]
+    if seq:
+        st.session_state.pep_input_box = seq
+    st.session_state.allele_selector = PRESETS[preset]["allele"]
+    st.session_state.current_preset = preset
+
+selected_preset = st.sidebar.selectbox(
+    "Choose a Pre-loaded Example:",
+    list(PRESETS.keys()),
+    index=list(PRESETS.keys()).index(st.session_state.current_preset),
+    key="preset_dropdown",
+    on_change=handle_preset_change,
+)
 preset_data = PRESETS[selected_preset]
 
-default_seq = preset_data["sequence"] if preset_data["sequence"] else "RMSAPSTGG"
-default_allele_idx = COMMON_ALLELES.index(preset_data["allele"]) if preset_data["allele"] in COMMON_ALLELES else 0
+cur_allele = st.session_state.get("allele_selector", preset_data["allele"])
+default_allele_idx = COMMON_ALLELES.index(cur_allele) if cur_allele in COMMON_ALLELES else 0
 
-selected_allele = st.sidebar.selectbox("Target HLA Allele:", COMMON_ALLELES, index=default_allele_idx)
+selected_allele = st.sidebar.selectbox(
+    "Target HLA Allele:",
+    COMMON_ALLELES,
+    index=default_allele_idx,
+    key="allele_selector",
+)
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Model Specifications:**")
@@ -196,7 +219,10 @@ st.markdown('<div class="sub-title">Live biophysical stability prediction and in
 
 col_input1, col_input2 = st.columns([3, 1])
 with col_input1:
-    pep_input = st.text_input("Peptide Sequence (9-mer or 10-mer):", value=default_seq).strip().upper()
+    pep_input = st.text_input(
+        "Peptide Sequence (9-mer or 10-mer):",
+        key="pep_input_box",
+    ).strip().upper()
 with col_input2:
     st.write("")
     st.write("")
@@ -409,13 +435,21 @@ with tab_3d:
     st.markdown("### 🌐 Interactive 3D Peptide-MHC Binding Groove")
     st.markdown("High-resolution crystallographic structure of the peptide bound inside the MHC Class I binding cleft (PDB: 1DUZ, 1.8 Å resolution).")
 
+    col_info1, col_info2 = st.columns([2, 1])
+    with col_info1:
+        st.markdown(f"**Active 3D Peptide:** `{eval_seq}` ({len(eval_seq)}-mer) bound to `{selected_allele}`")
+    with col_info2:
+        p2_char = eval_seq[1] if len(eval_seq) > 1 else "X"
+        p9_char = eval_seq[-1] if len(eval_seq) > 0 else "X"
+        st.markdown(f"**Anchor Conformation:** P2=`{p2_char}`, P9=`{p9_char}`")
+
     col_ctrl1, col_ctrl2, col_ctrl3 = st.columns(3)
     with col_ctrl1:
-        show_surface = st.checkbox("Show Semi-Transparent Cavity Surface", value=False)
+        show_surface = st.checkbox("Show Semi-Transparent Cavity Surface", value=False, key=f"surf_{eval_seq}")
     with col_ctrl2:
-        show_contacts = st.checkbox("Highlight Pocket B (Cyan) & F (Orange)", value=True)
+        show_contacts = st.checkbox("Highlight Pocket B (Cyan) & F (Orange)", value=True, key=f"cont_{eval_seq}")
     with col_ctrl3:
-        spin_struct = st.checkbox("Auto-Spin Structure", value=False)
+        spin_struct = st.checkbox("Auto-Spin Structure", value=False, key=f"spin_{eval_seq}")
 
     try:
         pdb_data = build_pmhc_pdb(eval_seq)
@@ -428,7 +462,11 @@ with tab_3d:
             spin=spin_struct,
             height=480,
         )
-        components.html(html_3d, height=500)
+        components.html(
+            html_3d,
+            height=500,
+            key=f"viewer_3d_{eval_seq}_{selected_allele}_{show_surface}_{show_contacts}_{spin_struct}"
+        )
     except Exception as e:
         st.error(f"Could not render 3D structure: {e}")
 
