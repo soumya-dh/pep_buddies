@@ -47,7 +47,7 @@ app_image = (
 # -------------------------------------------------------------
 @app.function(
     image=app_image,
-    concurrency_limit=10,
+    max_containers=10,
     timeout=3600,
 )
 @modal.web_server(port=8501, startup_timeout=60)
