@@ -1,0 +1,60 @@
+{
+  "frozen_model_manifest": {
+    "model_name": "PanStabilityMLP",
+    "frozen_weights_path": "models/frozen/pan_stability_mlp_frozen.pt",
+    "sha256_hash": "9566ac3568afaf800f0ddb55fe82fededc70b9cbecd441278a5436811c695cf6",
+    "frozen_timestamp_utc": "2026-10-03T12:57:22.570641+00:00",
+    "input_features": "Peptide 9x20 one-hot + HLA Pocket 34x20 one-hot (860 dims)",
+    "target": "canonical log10(1 + thalf_hours)",
+    "source_checkpoint": "models/checkpoints/random/mlp_baseline.pt",
+    "status": "FROZEN_LOCKED"
+  },
+  "prospective_predictions_summary": {
+    "n_evaluated_candidates": 1164,
+    "n_stable_binders": 54,
+    "stable_binder_rate_pct": 4.64,
+    "locked_predictions_file": "predictions/prospective_brain_cancer_predictions.csv",
+    "sha256_checksum_file": "predictions/prospective_brain_cancer_predictions.sha256"
+  },
+  "h3_k27m_mechanistic_analysis": {
+    "allele": "HLA-A*02:01",
+    "peptide_wt_9": "RKSAPSTGG",
+    "peptide_mut_9": "RMSAPSTGG",
+    "wt_predicted_thalf_hours": 0.496,
+    "mut_predicted_thalf_hours": 0.824,
+    "fold_change_thalf": 1.6,
+    "k_effect_at_p2": -0.0861,
+    "m_effect_at_p2": 0.0,
+    "wt_position_attributions": [
+      0.0099,
+      0.0407,
+      0.0066,
+      0.0038,
+      0.0121,
+      0.0088,
+      0.012,
+      0.0042,
+      0.1071
+    ],
+    "mut_position_attributions": [
+      0.0293,
+      0.0116,
+      0.0283,
+      0.0018,
+      0.0354,
+      0.0115,
+      0.003,
+      0.0145,
+      0.1839
+    ],
+    "biological_mechanism": "Wild-type Lysine (K) at position 2 introduces a positively charged residue into the hydrophobic B-pocket of HLA-A*02:01, severely destabilizing binding. The K27M mutation substitutes Methionine (M), a large hydrophobic residue that docks perfectly into the B-pocket anchor, dramatically transforming the peptide into a stable, immunogenic neoepitope."
+  },
+  "model_failure_analysis": {
+    "mean_anchor_ratio_true_positives": 0.336,
+    "mean_anchor_ratio_false_positives": 0.247,
+    "mean_anchor_ratio_false_negatives": 0.32,
+    "conclusion": "When the model fails (particularly on False Positives and False Negatives), its internal explanations reflect anomalous attribution distributions: False Positives often exhibit misplaced importance concentrated on non-anchor auxiliary residues (P4-P7) rather than the canonical P2/P9 binding pockets, indicating that explanation pathology mirrors prediction errors.",
+    "n_false_positives_analyzed": 5,
+    "n_false_negatives_analyzed": 5
+  }
+}

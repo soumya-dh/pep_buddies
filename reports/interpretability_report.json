@@ -1,0 +1,82 @@
+{
+  "model": "PanStabilityMLP",
+  "checkpoint": "models/checkpoints/random/mlp_baseline.pt",
+  "device": "cpu",
+  "deep_mutational_scanning": {
+    "HLA-A*02:01": {
+      "n_peptides": 50,
+      "anchor_importance_fraction": 0.37765875458717346,
+      "position_sensitivity": [
+        0.20678681135177612,
+        0.23285812139511108,
+        0.16607879102230072,
+        0.09288288652896881,
+        0.0935206264257431,
+        0.12634338438510895,
+        0.09663736075162888,
+        0.09524548053741455,
+        0.2996371388435364
+      ]
+    },
+    "HLA-A*24:02": {
+      "n_peptides": 49,
+      "anchor_importance_fraction": 0.41029050946235657,
+      "position_sensitivity": [
+        0.13194695115089417,
+        0.3233136832714081,
+        0.16731642186641693,
+        0.06831126660108566,
+        0.10366861522197723,
+        0.10016880929470062,
+        0.16304942965507507,
+        0.1251254677772522,
+        0.2747442126274109
+      ]
+    }
+  },
+  "gradient_vs_mutation_cross_check": {
+    "pearson_r": 0.8998,
+    "pearson_p_value": 0.00095,
+    "spearman_rho": 0.7667,
+    "spearman_p_value": 0.015944,
+    "top3_mutation_positions": [
+      9,
+      2,
+      1
+    ],
+    "top3_gradient_positions": [
+      9,
+      1,
+      6
+    ],
+    "top3_overlap": 2,
+    "mutation_sensitivity": [
+      0.2068,
+      0.2329,
+      0.1661,
+      0.0929,
+      0.0935,
+      0.1263,
+      0.0966,
+      0.0952,
+      0.2996
+    ],
+    "gradient_importance": [
+      0.0892,
+      0.0735,
+      0.0771,
+      0.0509,
+      0.0602,
+      0.0775,
+      0.0457,
+      0.0541,
+      0.1174
+    ]
+  },
+  "hla_pocket_masking": {
+    "pocket_b_mean_importance": 0.0468,
+    "pocket_f_mean_importance": 0.0474,
+    "other_pocket_mean_importance": 0.0353,
+    "anchor_pocket_ratio": 1.335
+  }
+}

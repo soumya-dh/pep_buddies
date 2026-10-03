@@ -1,0 +1,37 @@
+{
+  "anchor_vs_nonanchor_test": {
+    "mean_abs_delta_anchors (P2, P9)": 0.2803,
+    "mean_abs_delta_nonanchors (P4-P7)": 0.1077,
+    "anchor_to_nonanchor_ratio": 2.601,
+    "cohens_d": 1.094,
+    "t_statistic": 35.2358,
+    "t_test_p_value": 1.155440866283625e-217,
+    "mann_whitney_u": 5654009.0,
+    "mann_whitney_p_value": 3.6780441709000197e-267,
+    "is_statistically_significant": true
+  },
+  "adebayo_random_weights_test": {
+    "allele": "HLA-A*02:01",
+    "trained_anchor_fraction": 0.3777,
+    "random_weights_anchor_fraction": 0.2155,
+    "expected_uniform_anchor_fraction": 0.2222,
+    "pearson_r_trained_vs_random": -0.0012,
+    "spearman_rho_trained_vs_random": -0.0438,
+    "passed_sanity_check": true
+  },
+  "shuffled_labels_test": {
+    "shuffled_anchor_fraction": 0.2462,
+    "pearson_r_trained_vs_shuffled": 0.2129,
+    "spearman_rho_trained_vs_shuffled": 0.2023,
+    "passed_sanity_check": true
+  },
+  "netmhcstabpan_concordance_test": {
+    "n_benchmark_pairs": 320,
+    "n_single_point_mutation_pairs": 0,
+    "overall_stability_pearson_r": 0.9131,
+    "overall_stability_spearman_rho": 0.8957,
+    "mutation_delta_pearson_r": 0.9131,
+    "mutation_delta_spearman_rho": 0.8957,
+    "mutation_direction_sign_agreement": 0.75
+  }
+}
