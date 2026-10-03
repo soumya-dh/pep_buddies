@@ -1,0 +1,18 @@
+# Core data & modelling (Phase 1)
+numpy>=1.24
+pandas>=2.0
+scipy>=1.10
+scikit-learn>=1.3
+torch>=2.0
+
+# Figures
+matplotlib>=3.7
+seaborn>=0.12
+
+# Frozen foundation-model embeddings (Phase 2)
+transformers>=4.40
+# Required by T5-family tokenizers (Ankh / ProtT5); unused for ESM-2.
+sentencepiece>=0.1.99
+
+# NetMHCstabpan querying uses urllib from the standard library, so no HTTP
+# dependency is needed here.

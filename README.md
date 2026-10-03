@@ -17,6 +17,7 @@ This repository implements:
    - **Unseen Peptides (Harder)**: Zero peptide overlap between train and test.
    - **Unseen HLA Alleles (Hardest / Story Driver)**: Zero allele overlap between train and test (true pan-specific zero-shot extrapolation).
 5. **Pan-Specific Baseline Models**: Ridge regression baseline and PyTorch deep neural network evaluated across all three splits.
+6. **Frozen Foundation-Model Embeddings** (Phase 2): per-position embedding cache for ESM-2 and T5-family (Ankh) protein language models, with ridge/MLP heads, plus the diagnostics needed to tell a real win from a sampling artifact (per-allele correlation, paired bootstrap at both row and allele level, embedding-degeneracy checks).
 
 ---
 
@@ -83,6 +84,101 @@ allele-level calibration is the highest-value target for Phase 2.
 
 ---
 
+## 🧬 Phase 2: Frozen Foundation-Model Embeddings
+
+Peptides and HLA G-domains are embedded with frozen protein language models and
+**per-position** embeddings are cached (not only the mean). Heads are then fitted on
+top, starting with ridge.
+
+Two design choices worth stating up front:
+
+- **The HLA side embeds the full 182-aa mature G-domain**, and the 34 Nielsen contact
+  positions are sliced out of the per-position output afterwards. The 34-mer
+  pseudosequence is a *non-contiguous* concatenation of contact residues — passing
+  that string to a model trained on real protein chains feeds it out-of-distribution
+  nonsense. This way the input is in-distribution and the features are still
+  pocket-specific.
+- **Embeddings are keyed by unique sequence**, not by dataset row: 5,633 unique
+  peptides and 75 unique G-domains instead of 28,166 rows, roughly a 5× saving in
+  both compute and disk. Stored as float16 memmaps.
+
+### Results: ESM-2 35M + ridge (Spearman $\rho$)
+
+| Featurisation | random | unseen_peptides | unseen_alleles |
+| :--- | :---: | :---: | :---: |
+| `mean` — $[\overline{\text{pep}} \mid \overline{\text{pocket}}]$ | 0.5706 | 0.5474 | 0.2044 |
+| `perpos` — $[\text{pep}_{9\times d} \mid \overline{\text{pocket}}]$ | **0.6046** | **0.5551** | **0.2398** |
+| *one-hot ridge (baseline)* | *0.5885* | *0.5815* | *0.0910* |
+| *one-hot MLP (baseline)* | *0.7871* | *0.7629* | *0.4927* |
+
+Per-position beats mean-pooling on **every** split, which is the direct justification
+for caching per-position embeddings. But frozen ESM-2 + ridge **does not beat the
+one-hot MLP on any split**, and is far behind it on unseen alleles (0.24 vs 0.49).
+
+### Why: the peptide embeddings are degenerate
+
+| | effective rank | % of dims | mean pairwise cosine | 5th pct cosine |
+| :--- | :---: | :---: | :---: | :---: |
+| peptides (9-mers) | 164.9 / 4320 | **3.8%** | **0.945** | 0.879 |
+| HLA G-domains | 17.3 / 75 | 23.1% | 0.987 | 0.970 |
+
+ESM-2 was trained on complete protein chains. A bare 9-mer carries almost no context,
+and the resulting embeddings collapse into a narrow region of representation space —
+even the most dissimilar peptide pairs sit at 0.879 cosine. **This is a
+distribution-mismatch problem, not a capacity problem, so scaling to ESM-2 650M is not
+expected to fix it.**
+
+The HLA side is the opposite story. Its high cosine similarity is largely genuine (all
+75 sequences are HLA class I G-domains, which really are ~90% identical), and the
+embeddings carry real cross-allele signal:
+
+| Estimator of a held-out allele's mean stability | MAE (target scale) |
+| :--- | :---: |
+| 34-mer pseudosequence identity, k-NN over training alleles | 0.1925 |
+| **ESM-2 pocket-embedding cosine, k-NN over training alleles** | **0.1308** |
+
+A 32% reduction in error — the HLA embeddings encode allele-level information the
+pseudosequence string does not. This also accounts for the entire 0.09 → 0.24
+unseen-allele lift over one-hot ridge, since one-hot cannot generalise across alleles
+at all.
+
+### Paired bootstrap: which differences are real
+
+A larger number is not a win. Each difference is tested by a paired bootstrap, under
+two resampling units (`src/stats.py`):
+
+| Comparison (unseen_alleles, Spearman $\rho$) | Resample rows | Resample alleles |
+| :--- | :--- | :--- |
+| ESM2 `perpos` − one-hot ridge | +0.149 [+0.123, +0.176] ✅ | +0.149 [−0.007, +0.313] ❌ |
+| ESM2 `perpos` − one-hot MLP | −0.209 [−0.238, −0.180] ✅ | −0.209 [−0.418, −0.020] ✅ |
+
+Resampling **rows** asks whether a ranking holds on another sample of peptide-HLA
+pairs *from these same alleles*. Resampling **alleles** asks whether it holds on
+another sample of *alleles* — which is the claim a pan-specific model actually makes.
+
+With only 8 held-out alleles, "embeddings beat one-hot ridge" **does not survive
+allele-level resampling** and should be read as suggestive, not established. The
+one-hot MLP's advantage over the embedding ridge holds under both units.
+
+### Current status and next steps
+
+Scaling up model size is **not** the indicated next move. Two experiments follow
+directly from the diagnostics above:
+
+1. **Hybrid featurisation** — one-hot/BLOSUM62 peptide features combined with ESM-2
+   HLA pocket embeddings: sharp encoding where ESM-2 fails, generalisable encoding
+   where it wins.
+2. **Joint encoding** — `peptide + linker + G-domain` as a single sequence, to test
+   whether supplying context rescues the peptide representation. Cannot be cached per
+   unique sequence (28k unique pairs), so worth running only as a targeted test.
+
+Known gaps: the embedding and stats modules have no unit tests yet, and on
+`unseen_alleles/perpos` the validation alpha sweep selected the smallest alpha
+alongside ill-conditioning warnings, which suggests alpha selection is unreliable on a
+7-allele validation split.
+
+---
+
 ## 📈 Figures
 
 ### Performance Comparison Across Splits
@@ -102,18 +198,36 @@ allele-level calibration is the highest-value target for Phase 2.
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-pip install numpy pandas scikit-learn scipy matplotlib seaborn torch requests
+pip install -r requirements.txt
 ```
 
 ### 2. Run Automated Unit Tests
 ```bash
-python -m unittest tests/test_phase1.py
+python -m unittest tests.test_phase1      # 25 tests
 ```
 
-### 3. Run End-to-End Pipeline
+### 3. Run Phase 1 End-to-End
 ```bash
-python run_phase1.py
+python run_phase1.py            # cleaning → splits → baselines (5 seeds) → head-to-head → figures
+python -m src.calibration_probe # how much of the unseen-allele gap is allele miscalibration
 ```
+
+### 4. Run Phase 2 (embeddings)
+```bash
+# Cache per-position embeddings for unique peptides (5,633) and G-domains (75).
+# ESM-2 35M takes ~1 min on CPU; weights download from Hugging Face on first use.
+python -m src.embeddings.build --model esm2-35m --kind all
+
+# Fit ridge heads on all three splits and write reports/phase2_heads.json
+python -m models.train_heads --model esm2-35m --featurisation mean perpos
+```
+
+Available models: `esm2-8m`, `esm2-35m`, `esm2-150m`, `esm2-650m`, `ankh-base`.
+Pass `--random-init` to validate the pipeline without downloading weights (results
+are then meaningless and tagged as such in the cache metadata).
+
+Embeddings land in `data/embeddings/` (gitignored, ~60 MB for 35M) and are keyed by
+unique sequence, so rebuilding is cheap.
 
 ---
 
@@ -125,9 +239,10 @@ python run_phase1.py
 │   ├── processed/                        # Cleaned & normalized datasets
 │   ├── hla_reference/                    # IPD-IMGT/HLA fastas & MHC_pseudo.dat
 │   ├── splits/                           # random, unseen_peptides, unseen_alleles
+│   ├── embeddings/                       # Per-position PLM embedding cache (gitignored)
 │   └── netmhcstabpan_benchmark/          # Web submission batches & cache
 ├── figures/                              # Publication-quality benchmark figures
-├── reports/                              # head_to_head.json / .md (generated)
+├── reports/                              # head_to_head, calibration_probe, phase2_heads (generated)
 ├── src/
 │   ├── data_cleaning.py                  # Normalizer & validator
 │   ├── hla_database.py                   # IMGT sequence & 34-mer pseudo-sequences
@@ -135,9 +250,17 @@ python run_phase1.py
 │   ├── netmhcstabpan_client.py           # DTU webface2 CGI query runner & parser
 │   ├── targets.py                        # Canonical target log10(1+thalf); single source of truth
 │   ├── head_to_head.py                   # Like-for-like NetMHCstabpan comparison on its 320-pair subset
+│   ├── calibration_probe.py              # Is the unseen-allele gap offsets or ranking?
+│   ├── stats.py                          # Paired bootstrap CIs (row & allele resampling)
+│   ├── embeddings/
+│   │   ├── encoders.py                   # Frozen ESM-2 / T5-family wrappers -> per-residue embeddings
+│   │   ├── cache.py                      # float16 memmap cache keyed by unique sequence
+│   │   └── build.py                      # CLI: populate the cache for one model & kind
 │   └── evaluate.py                       # Canonical metrics, per-allele breakdown & visualizations
 ├── models/
 │   ├── baseline_model.py                 # Ridge & PyTorch Pan-Specific MLP
+│   ├── heads.py                          # Featurisations + ridge head on frozen embeddings
+│   ├── train_heads.py                    # CLI: train & score heads across splits
 │   ├── predictions/                      # Per-row test predictions (gitignored, regenerable)
 │   └── checkpoints/                      # Saved PyTorch model weights (.pt)
 ├── docs/
