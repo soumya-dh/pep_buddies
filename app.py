@@ -125,43 +125,49 @@ COMMON_ALLELES = [
     "HLA-B*08:01",
 ]
 
-# Preset Clinical & Prospective Examples with Wild-Type counterparts
+# Preset Clinical & Prospective Examples with accurate UniProt Wild-Type counterparts
 PRESETS = {
     "H3.3 K27M Mutant (RMSAPSTGG) - DMG/DIPG": {
         "sequence": "RMSAPSTGG",
         "wt_sequence": "RKSAPSTGG",
         "allele": "HLA-A*02:01",
-        "desc": "Gain-of-stability tumor neoantigen. Met at P2 relieves electrostatic clash in Pocket B.",
+        "desc": "Gain-of-stability tumor neoantigen. Met at P2 relieves electrostatic repulsion in Pocket B.",
     },
     "H3.3 Wild-Type (RKSAPSTGG) - Unstable Control": {
         "sequence": "RKSAPSTGG",
         "wt_sequence": "RMSAPSTGG",
         "allele": "HLA-A*02:01",
-        "desc": "Normal wild-type equivalent. Pos 2 Lysine severely clashes with Met45/Val67 in Pocket B.",
+        "desc": "Normal wild-type counterpart. Pos 2 Lysine causes steric & charge clash against Val67 in Pocket B.",
     },
     "EGFRvIII (LEEKKGNYV) - Glioblastoma Exon 2-7": {
         "sequence": "LEEKKGNYV",
         "wt_sequence": "",
         "allele": "HLA-A*02:01",
-        "desc": "Novel tumor junction epitope. C-term Valine anchors into Pocket F; Glu at P2 modulates affinity.",
+        "desc": "Tumor junction epitope. C-terminal Valine anchors into Pocket F; Glu at P2 modulates affinity.",
     },
     "IL13Rα2 (WLPFGFILI) - Overexpressed Glioma": {
         "sequence": "WLPFGFILI",
         "wt_sequence": "",
         "allele": "HLA-A*02:01",
-        "desc": "Glioblastoma-associated overexpressed antigen with strong hydrophobic anchors.",
+        "desc": "Glioblastoma-associated overexpressed antigen with dual hydrophobic anchors.",
     },
-    "H3.3 K27M 10-mer (RMSAPATGGV) - High-Affinity Decamer": {
+    "H3.3 K27M 10-mer (RMSAPSTGGV) - Canonical Decamer": {
+        "sequence": "RMSAPSTGGV",
+        "wt_sequence": "RKSAPSTGGV",
+        "allele": "HLA-A*02:01",
+        "desc": "Canonical UniProt Histone H3.3 decamer (Ser31). Aligns to 9-mer core RMSAPSTGV with C-term Valine.",
+    },
+    "H3.1 K27M 10-mer (RMSAPATGGV) - Histone H3.1 Variant": {
         "sequence": "RMSAPATGGV",
         "wt_sequence": "RKSAPATGGV",
         "allele": "HLA-A*02:01",
-        "desc": "Full-length 10-mer candidate. Optimal 9-mer bulge core with C-term Valine.",
+        "desc": "Histone H3.1 variant decamer carrying Ala31. Aligns to 9-mer core RMSPATGGV.",
     },
     "Poly-Aspartate Negative Control (DDDDDDDDD)": {
         "sequence": "DDDDDDDDD",
         "wt_sequence": "",
         "allele": "HLA-A*02:01",
-        "desc": "Artificial negative control. Severe poly-acidic electrostatic repulsion in all pockets.",
+        "desc": "Artificial negative control. Severe poly-acidic electrostatic repulsion across all pockets.",
     },
     "Custom Sequence (Enter Your Own)": {
         "sequence": "",
@@ -174,19 +180,21 @@ PRESETS = {
 # -------------------------------------------------------------
 # Sidebar Controls
 # -------------------------------------------------------------
-# Local file load prevents failure on venue Wi-Fi drops
 local_img_path = "figures/quantitative_metrics_validation.png"
 if os.path.exists(local_img_path):
     st.sidebar.image(local_img_path, use_container_width=True, caption="Model Interpretability Validation")
 
 st.sidebar.title("🧬 Demonstration Panel")
 
-# Synchronize session state with preset dropdown selection
-if "current_preset" not in st.session_state:
-    st.session_state.current_preset = list(PRESETS.keys())[0]
-    st.session_state.pep_input_box = PRESETS[st.session_state.current_preset]["sequence"]
-    st.session_state.wt_input_box = PRESETS[st.session_state.current_preset].get("wt_sequence", "")
-    st.session_state.allele_selector = PRESETS[st.session_state.current_preset]["allele"]
+# Initialize session state cleanly (avoiding default value conflict warnings)
+if "preset_dropdown" not in st.session_state:
+    st.session_state.preset_dropdown = list(PRESETS.keys())[0]
+if "pep_input_box" not in st.session_state:
+    st.session_state.pep_input_box = PRESETS[st.session_state.preset_dropdown]["sequence"]
+if "wt_input_box" not in st.session_state:
+    st.session_state.wt_input_box = PRESETS[st.session_state.preset_dropdown].get("wt_sequence", "")
+if "allele_selector" not in st.session_state:
+    st.session_state.allele_selector = PRESETS[st.session_state.preset_dropdown]["allele"]
 
 def handle_preset_change():
     preset = st.session_state.preset_dropdown
@@ -196,24 +204,18 @@ def handle_preset_change():
         st.session_state.pep_input_box = seq
     st.session_state.wt_input_box = wt_seq
     st.session_state.allele_selector = PRESETS[preset]["allele"]
-    st.session_state.current_preset = preset
 
 selected_preset = st.sidebar.selectbox(
     "Choose a Pre-loaded Example:",
     list(PRESETS.keys()),
-    index=list(PRESETS.keys()).index(st.session_state.current_preset),
     key="preset_dropdown",
     on_change=handle_preset_change,
 )
 preset_data = PRESETS[selected_preset]
 
-cur_allele = st.session_state.get("allele_selector", preset_data["allele"])
-default_allele_idx = COMMON_ALLELES.index(cur_allele) if cur_allele in COMMON_ALLELES else 0
-
 selected_allele = st.sidebar.selectbox(
     "Target HLA Allele:",
     COMMON_ALLELES,
-    index=default_allele_idx,
     key="allele_selector",
 )
 
@@ -267,7 +269,11 @@ if len(pep_input) not in [9, 10]:
 # Core Prediction Logic with Monte Carlo Dropout & Scan Matrix
 # -------------------------------------------------------------
 def mc_predict_uncertainty(model_inst, feat_tensor: torch.Tensor, n_samples: int = 30) -> Tuple[float, float]:
-    """Estimates epistemic uncertainty using Monte Carlo Dropout (30 stochastic passes at p=0.20)."""
+    """
+    Estimates epistemic uncertainty using Monte Carlo Dropout (30 stochastic passes at p=0.20).
+    Keeps BatchNorm in eval mode to prevent batch-size 1 issues while toggling Dropout to train mode.
+    """
+    model_inst.eval()
     for m in model_inst.modules():
         if isinstance(m, nn.Dropout):
             m.train()
@@ -278,6 +284,25 @@ def mc_predict_uncertainty(model_inst, feat_tensor: torch.Tensor, n_samples: int
     model_inst.eval()
     thalfs = [target_to_thalf(float(p)) for p in mc_preds]
     return float(np.mean(thalfs)), float(np.std(thalfs))
+
+
+def mc_predict_paired(model_inst, mut_feat: torch.Tensor, wt_feat: torch.Tensor, n_samples: int = 30) -> Tuple[float, float, float]:
+    """Computes paired Monte Carlo Dropout difference to isolate neoantigen stability shift."""
+    model_inst.eval()
+    for m in model_inst.modules():
+        if isinstance(m, nn.Dropout):
+            m.train()
+
+    with torch.no_grad():
+        mut_preds = torch.stack([model_inst(mut_feat) for _ in range(n_samples)]).squeeze(-1).numpy()
+        wt_preds = torch.stack([model_inst(wt_feat) for _ in range(n_samples)]).squeeze(-1).numpy()
+
+    model_inst.eval()
+    mut_thalfs = np.array([target_to_thalf(float(p)) for p in mut_preds])
+    wt_thalfs = np.array([target_to_thalf(float(p)) for p in wt_preds])
+    paired_deltas = mut_thalfs - wt_thalfs
+    p_gain = float(np.mean(paired_deltas > 0) * 100)
+    return float(np.mean(paired_deltas)), float(np.std(paired_deltas)), p_gain
 
 
 @st.cache_data(show_spinner=False)
@@ -301,7 +326,7 @@ def run_prediction_and_scan(sequence: str, allele: str) -> Dict[str, Any]:
         pred_target = model(feat_base).item()
     thalf = target_to_thalf(pred_target)
 
-    # MC-Dropout Uncertainty
+    # MC-Dropout Uncertainty (BatchNorm safe)
     thalf_mean, thalf_std = mc_predict_uncertainty(model, feat_base, n_samples=30)
 
     # In silico deep mutational scanning (9 x 20 matrix)
@@ -358,8 +383,17 @@ def run_prediction_and_scan(sequence: str, allele: str) -> Dict[str, Any]:
         "scan_matrix": scan_matrix.tolist(),
         "air": float(air_val),
         "top_stabilizing": top_stabilizing[:5],
+        "feat_base": feat_base,
     }
 
+
+# Pre-warm the cache for all presets so live demo clicks are instant
+for p_info in PRESETS.values():
+    if p_info["sequence"]:
+        try:
+            run_prediction_and_scan(p_info["sequence"], p_info["allele"])
+        except Exception:
+            pass
 
 res = run_prediction_and_scan(pep_input, selected_allele)
 
@@ -401,24 +435,47 @@ if wt_input:
     if not invalid_wt and len(wt_input) in [9, 10]:
         wt_res = run_prediction_and_scan(wt_input, selected_allele)
         st.markdown("#### ⚖️ Neoantigen vs. Wild-Type Comparative Analysis")
+
+        # Paired MC-dropout assessment
+        mut_feat = res["feat_base"]
+        wt_feat = wt_res["feat_base"]
+        paired_mean, paired_std, p_gain = mc_predict_paired(model, mut_feat, wt_feat, n_samples=30)
+
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("Mutant T½", f"{res['thalf']:.2f} ± {res['thalf_std']:.2f} h")
         c2.metric("Wild-Type T½", f"{wt_res['thalf']:.2f} ± {wt_res['thalf_std']:.2f} h")
         fold_change = res["thalf"] / max(wt_res["thalf"], 1e-4)
         delta_thalf = res["thalf"] - wt_res["thalf"]
         c3.metric("Affinity Ratio (Fold Change)", f"{fold_change:.2f}×", delta=f"{delta_thalf:+.2f} h")
-        verdict = "🟢 Strong Gain-of-Stability" if fold_change >= 1.4 else "🟡 Moderate Change" if fold_change >= 1.0 else "🔴 Loss-of-Stability"
-        c4.metric("Presentation Verdict", verdict)
 
-# Explicit Biophysical Note for Flagship K27M Preset
+        # Uncertainty-aware verdict
+        intervals_overlap = abs(delta_thalf) < (res["thalf_std"] + wt_res["thalf_std"])
+        if fold_change >= 1.4:
+            if intervals_overlap:
+                verdict = "🟢 Gain-of-Stability (Intervals overlap, suggestive)"
+            else:
+                verdict = "🟢 Significant Gain-of-Stability"
+        elif fold_change >= 0.9:
+            verdict = "🟡 Comparable Stability"
+        else:
+            if intervals_overlap:
+                verdict = "🔴 Loss-of-Stability (Intervals overlap, suggestive)"
+            else:
+                verdict = "🔴 Significant Loss-of-Stability"
+        c4.metric("Presentation Verdict", verdict, help=f"Paired MC ΔT½ = {paired_mean:+.2f} ± {paired_std:.2f} h (P(Mutant > WT) = {p_gain:.0f}%)")
+
+# Dynamically Computed Biophysical Insight for K27M Flagship
 eval_seq = res["eval_seq"]
-if eval_seq == "RMSAPSTGG":
+if eval_seq == "RMSAPSTGG" and selected_allele == "HLA-A*02:01" and wt_input:
+    wt_chk = run_prediction_and_scan(wt_input, selected_allele)
+    gain_pct = (res["thalf"] / max(wt_chk["thalf"], 1e-4) - 1.0) * 100.0
     st.info(
-        "💡 **Biophysical Insight (Why K27M Gains Stability Despite Weak P9 Gly):** "
-        "Wild-type H3.3 has Lysine at P2, which introduces a severe steric and electrostatic clash in Pocket B, causing complex collapse (T½ ≈ 0.50 h). "
-        "The oncogenic K27M mutation introduces Methionine at P2—an optimal hydrophobic fit for Pocket B—driving a +64% gain in half-life (0.82 h) that rescues "
-        "the complex despite a non-anchor Glycine at P9. However, because P9 lacks a hydrophobic sidechain for Pocket F, overall half-life remains intermediate (0.82 h), "
-        "in complete agreement with clinical findings that K27M is a presentation-competent, intermediate-affinity glioma neoantigen."
+        f"💡 **Biophysical Insight (Why K27M Gains Stability Despite Weak P9 Gly):** "
+        f"Wild-type H3 has Lysine at P2, introducing steric and electrostatic repulsion in Pocket B (WT T½ ≈ {wt_chk['thalf']:.2f} h). "
+        f"The K27M mutation introduces Methionine at P2—an optimal hydrophobic fit for Pocket B—driving a {gain_pct:+.0f}% gain in predicted half-life "
+        f"(mutant T½ ≈ {res['thalf']:.2f} h) that rescues the complex despite a non-anchor Glycine at P9. "
+        f"However, because P9 lacks a hydrophobic sidechain for Pocket F, overall half-life remains intermediate, "
+        f"consistent with reports that K27M is an intermediate-affinity neoantigen presented by HLA-A*02:01."
     )
 
 # -------------------------------------------------------------
@@ -501,9 +558,9 @@ with col_vis_left:
     if res["top_stabilizing"]:
         st.markdown("**💡 In Silico Neoantigen Optimization (Top Stabilizing Designs):**")
         for opt in res["top_stabilizing"][:3]:
-            st.markdown(f"- `{opt['position']}: {opt['mutation']}` ➜ Predicted $T_{{1/2}} = {opt['mutant_thalf']:.2f}\\text{{ h}}$ ($\\Delta S = {opt['delta_score']:+.3f}$)")
+            st.markdown(rf"- `{opt['position']}: {opt['mutation']}` ➜ Predicted $T_{{1/2}} = {opt['mutant_thalf']:.2f}\text{{ h}}$ ($\Delta S = {opt['delta_score']:+.3f}$)")
 
-    # Automated Biophysical Analysis
+    # Comprehensive Literature-Grounded Biophysical Pocket Analysis
     st.markdown("### 🔬 Automated Biophysical Pocket Analysis")
 
     def generate_biophysical_notes(sequence: str, allele: str) -> List[str]:
@@ -529,26 +586,84 @@ with col_vis_left:
 
         elif allele == "HLA-B*07:02":
             if p2 == "P":
-                notes.append(f"**Pocket B (P2 = P):** **Strict Biological Anchor Match!** HLA-B*07:02 strictly requires Proline at P2 to fit its unique constricted pocket geometry.")
+                notes.append(f"**Pocket B (P2 = P):** **Preferred Anchor Match.** HLA-B*07:02 strongly prefers Proline at P2 to fit its constricted pocket geometry.")
+            elif p2 in ["A", "R"]:
+                notes.append(f"**Pocket B (P2 = {p2}):** Tolerated secondary anchor for HLA-B*07:02 (Proline preferred).")
             else:
-                notes.append(f"**Pocket B (P2 = {p2}):** ⚠️ **Non-Proline Penalty.** HLA-B*07:02 strongly penalizes non-proline residues at P2.")
+                notes.append(f"**Pocket B (P2 = {p2}):** ⚠️ **Non-Proline Penalty.** HLA-B*07:02 strongly prefers Proline at P2; {p2} is penalized.")
 
         elif allele == "HLA-A*24:02":
             if p2 in ["Y", "F"]:
                 notes.append(f"**Pocket B (P2 = {p2}):** **Optimal Aromatic Anchor.** HLA-A*24:02 features a large aromatic pocket that specifically selects for Tyrosine or Phenylalanine.")
+            elif p2 in ["M", "L", "I", "V"]:
+                notes.append(f"**Pocket B (P2 = {p2}):** Tolerated hydrophobic anchor in HLA-A*24:02 Pocket B.")
             else:
                 notes.append(f"**Pocket B (P2 = {p2}):** Sub-optimal anchor for HLA-A*24:02 Pocket B (prefers aromatic Y/F).")
 
+        elif allele == "HLA-A*03:01":
+            if p2 in ["L", "M", "V", "I"]:
+                notes.append(f"**Pocket B (P2 = {p2}):** **Preferred Hydrophobic Anchor.** Slots into the hydrophobic Pocket B cleft of HLA-A*03:01.")
+            else:
+                notes.append(f"**Pocket B (P2 = {p2}):** Sub-optimal anchor for HLA-A*03:01 Pocket B (prefers aliphatic L/M/V).")
+
+        elif allele == "HLA-A*01:01":
+            if p2 in ["T", "S"]:
+                notes.append(f"**Pocket B (P2 = {p2}):** **Canonical Polar Anchor.** HLA-A*01:01 Pocket B prefers small polar Threonine or Serine.")
+            else:
+                notes.append(f"**Pocket B (P2 = {p2}):** Non-canonical P2 anchor for HLA-A*01:01 (strongly prefers polar T/S).")
+
+        elif allele == "HLA-B*08:01":
+            if p2 in ["R", "K"]:
+                notes.append(f"**Pocket B (P2 = {p2}):** **Canonical Basic Anchor.** HLA-B*08:01 Pocket B uniquely accommodates basic Arginine or Lysine.")
+            else:
+                notes.append(f"**Pocket B (P2 = {p2}):** Non-canonical P2 residue for HLA-B*08:01 (prefers basic R/K).")
+
         # Pocket F Analysis
-        if allele in ["HLA-A*02:01", "HLA-B*07:02"]:
+        if allele == "HLA-A*02:01":
             if p9 in ["V", "L"]:
-                notes.append(f"**Pocket F (P9 = {p9}):** **Strong Hydrophobic C-Terminal Anchor.** Hydrophobic sidechain packs tightly into Pocket F (Thr80, Leu81, Tyr84, Tyr116, Tyr123, Trp147).")
-            elif p9 in ["I", "A", "M", "F"]:
+                notes.append(f"**Pocket F (P9 = {p9}):** **Strong Hydrophobic C-Terminal Anchor.** Hydrophobic sidechain packs tightly into Pocket F (Thr80, Leu81, Tyr84, Tyr116, Tyr123, Trp147 — HLA-A*02:01 numbering).")
+            elif p9 in ["I", "A", "M"]:
                 notes.append(f"**Pocket F (P9 = {p9}):** **Tolerated C-Terminal Anchor.** Forms stable hydrophobic contacts in Pocket F.")
             elif p9 == "G":
                 notes.append(f"**Pocket F (P9 = G):** ⚠️ **Missing Anchor Penalty.** Glycine lacks a sidechain and cannot form stabilizing hydrophobic contacts, leaving Pocket F empty.")
             elif p9 in ["K", "R", "D", "E"]:
                 notes.append(f"**Pocket F (P9 = {p9}):** ⚠️ **Severe Charged Residue Clash.** Polar/charged C-terminus prevents proper burial in the hydrophobic cavity.")
+
+        elif allele == "HLA-B*07:02":
+            if p9 in ["L", "V", "I", "F", "M"]:
+                notes.append(f"**Pocket F (P9 = {p9}):** **Optimal Hydrophobic C-Terminal Anchor.** Fits the hydrophobic Pocket F cavity of HLA-B*07:02.")
+            elif p9 == "G":
+                notes.append(f"**Pocket F (P9 = G):** ⚠️ **Missing Anchor Penalty.** Glycine leaves Pocket F unoccupied.")
+            else:
+                notes.append(f"**Pocket F (P9 = {p9}):** Sub-optimal C-terminus for HLA-B*07:02 Pocket F (prefers hydrophobic L/V/I).")
+
+        elif allele == "HLA-A*24:02":
+            if p9 in ["F", "L", "I", "W"]:
+                notes.append(f"**Pocket F (P9 = {p9}):** **Preferred Aromatic/Hydrophobic Anchor.** Deep Pocket F of HLA-A*24:02 prefers bulky hydrophobic residues (F, L, I, W).")
+            elif p9 == "G":
+                notes.append(f"**Pocket F (P9 = G):** ⚠️ **Missing Anchor Penalty.** Glycine cannot engage HLA-A*24:02 Pocket F.")
+            else:
+                notes.append(f"**Pocket F (P9 = {p9}):** Sub-optimal C-terminus for HLA-A*24:02 (prefers F/L/I/W).")
+
+        elif allele == "HLA-A*03:01":
+            if p9 in ["K", "R"]:
+                notes.append(f"**Pocket F (P9 = {p9}):** **Basic Anchor Match.** Positively charged C-terminus forms a stabilizing salt bridge with Asp116 in HLA-A*03:01 Pocket F.")
+            elif p9 in ["Y", "F"]:
+                notes.append(f"**Pocket F (P9 = {p9}):** Tolerated aromatic C-terminal anchor in HLA-A*03:01.")
+            else:
+                notes.append(f"**Pocket F (P9 = {p9}):** Sub-optimal C-terminus for HLA-A*03:01 (prefers basic K/R or aromatic Y/F).")
+
+        elif allele == "HLA-A*01:01":
+            if p9 in ["Y", "F"]:
+                notes.append(f"**Pocket F (P9 = {p9}):** **Preferred Aromatic Anchor.** HLA-A*01:01 Pocket F prefers C-terminal Tyrosine or Phenylalanine.")
+            else:
+                notes.append(f"**Pocket F (P9 = {p9}):** Sub-optimal C-terminus for HLA-A*01:01 (prefers aromatic Y/F).")
+
+        elif allele == "HLA-B*08:01":
+            if p9 in ["L", "V", "I"]:
+                notes.append(f"**Pocket F (P9 = {p9}):** **Preferred Hydrophobic Anchor.** Packs into HLA-B*08:01 Pocket F.")
+            else:
+                notes.append(f"**Pocket F (P9 = {p9}):** Sub-optimal C-terminus for HLA-B*08:01 (prefers hydrophobic L/V/I).")
 
         return notes
 
@@ -605,7 +720,7 @@ with col_vis_right:
             elif p2 in ["I", "V", "A", "T"]:
                 p2_desc = f'<b style="color: #2563eb;">Peptide P2 Anchor ({p2}):</b> Tolerated secondary hydrophobic anchor with moderate packing.'
             elif p2 in ["K", "R"]:
-                p2_desc = f'<b style="color: #dc2626;">⚠️ Peptide P2 Anchor ({p2} = Lys/Arg):</b> <b>Severe Steric & Electrostatic Clash!</b> Long basic sidechain collides with <span style="color: #06b6d4;">Val67 (illustrative ~2.7 Å steric clash)</span> and repels the hydrophobic floor.'
+                p2_desc = f'<b style="color: #dc2626;">⚠️ Peptide P2 Anchor ({p2} = Lys/Arg):</b> <b>Steric & Electrostatic Clash!</b> Long basic sidechain collides with <span style="color: #06b6d4;">Val67 (illustrative ~2.7 Å steric clash)</span> and repels the hydrophobic floor.'
             elif p2 in ["D", "E"]:
                 p2_desc = f'<b style="color: #dc2626;">⚠️ Peptide P2 Anchor ({p2} = Asp/Glu):</b> Unfavorable acidic charge inside the nonpolar Pocket B cavity.'
             elif p2 == "P":
@@ -614,9 +729,9 @@ with col_vis_right:
                 p2_desc = f'<b style="color: #2563eb;">Peptide P2 Anchor ({p2}):</b> Sub-optimal Pocket B residue for {allele}.'
         elif allele == "HLA-B*07:02":
             if p2 == "P":
-                p2_desc = f'<b style="color: #10b981;">Peptide P2 Anchor (P = Pro):</b> <b>Strict Biological Requirement Met!</b> Proline fits the unique constricted geometry of HLA-B*07:02 Pocket B.'
+                p2_desc = f'<b style="color: #10b981;">Peptide P2 Anchor (P = Pro):</b> <b>Preferred Anchor Match!</b> Proline fits the constricted geometry of HLA-B*07:02 Pocket B.'
             else:
-                p2_desc = f'<b style="color: #dc2626;">⚠️ Peptide P2 Anchor ({p2}):</b> Non-proline residue fails the strict stereochemical requirement of HLA-B*07:02 Pocket B.'
+                p2_desc = f'<b style="color: #dc2626;">⚠️ Peptide P2 Anchor ({p2}):</b> Non-proline residue receives a penalty in HLA-B*07:02 Pocket B.'
         elif allele == "HLA-A*24:02":
             if p2 in ["Y", "F"]:
                 p2_desc = f'<b style="color: #2563eb;">Peptide P2 Anchor ({p2}):</b> <b>Optimal Aromatic Fit!</b> Aromatic ring slots into the large hydrophobic cleft of HLA-A*24:02 Pocket B.'
@@ -626,15 +741,22 @@ with col_vis_right:
             p2_desc = f'<b style="color: #2563eb;">Peptide P2 Anchor ({p2}):</b> Interacts with {allele} Pocket B cavity.'
 
         # Pocket F Dynamic Mechanics
-        if allele in ["HLA-A*02:01", "HLA-B*07:02"]:
+        if allele == "HLA-A*02:01":
             if p9 in ["V", "L", "I", "M", "A"]:
-                p9_desc = f'<b style="color: #ea580c;">Peptide P9 Anchor ({p9}):</b> Hydrophobic C-terminus packs tightly into Pocket F cavity (<span style="color: #f97316;">Thr80, Leu81, Tyr84, Tyr116, Tyr123, Trp147</span>).'
+                p9_desc = f'<b style="color: #ea580c;">Peptide P9 Anchor ({p9}):</b> Hydrophobic C-terminus packs tightly into Pocket F cavity (<span style="color: #f97316;">Thr80, Leu81, Tyr84, Tyr116, Tyr123, Trp147 — A*02:01 numbering</span>).'
             elif p9 == "G":
                 p9_desc = f'<b style="color: #dc2626;">⚠️ Peptide P9 Anchor (G = Gly):</b> <b>Missing Anchor Penalty!</b> Glycine lacks a sidechain; Pocket F remains unoccupied, destabilizing the C-terminal anchor.'
             elif p9 in ["K", "R", "D", "E"]:
                 p9_desc = f'<b style="color: #dc2626;">⚠️ Peptide P9 Anchor ({p9}):</b> Charged C-terminus cannot be buried inside hydrophobic Pocket F.'
             else:
                 p9_desc = f'<b style="color: #ea580c;">Peptide P9 Anchor ({p9}):</b> C-terminal orientation in Pocket F.'
+        elif allele == "HLA-B*07:02":
+            if p9 in ["L", "V", "I", "F", "M"]:
+                p9_desc = f'<b style="color: #ea580c;">Peptide P9 Anchor ({p9}):</b> Hydrophobic C-terminus packs into the Pocket F cavity of HLA-B*07:02.'
+            elif p9 == "G":
+                p9_desc = f'<b style="color: #dc2626;">⚠️ Peptide P9 Anchor (G = Gly):</b> <b>Missing Anchor Penalty!</b> Glycine leaves HLA-B*07:02 Pocket F unoccupied.'
+            else:
+                p9_desc = f'<b style="color: #ea580c;">Peptide P9 Anchor ({p9}):</b> C-terminal contact in HLA-B*07:02 Pocket F.'
         elif allele == "HLA-A*03:01":
             if p9 in ["K", "R"]:
                 p9_desc = f'<b style="color: #10b981;">Peptide P9 Anchor ({p9}):</b> <b>Basic Anchor Match!</b> Positively charged residue forms a stabilizing salt bridge with Asp116 in Pocket F.'
@@ -667,11 +789,14 @@ with col_vis_right:
 # -------------------------------------------------------------
 @st.cache_data(show_spinner=False)
 def screen_cross_alleles(sequence: str) -> List[Dict[str, Any]]:
-    eval_core = sequence[:9]
     results = []
     for allele in COMMON_ALLELES:
         pseudo = hla_db.get_pseudosequence(allele)
-        pep_oh = one_hot_encode_sequence(eval_core, max_len=9).reshape(-1)
+        if len(sequence) == 10:
+            core, _, _ = find_best_core_for_10mer(model, sequence, pseudo)
+        else:
+            core = sequence[:9]
+        pep_oh = one_hot_encode_sequence(core, max_len=9).reshape(-1)
         hla_oh = one_hot_encode_sequence(pseudo, max_len=34).reshape(-1)
         feat = torch.tensor(np.concatenate([pep_oh, hla_oh]), dtype=torch.float32).unsqueeze(0)
         with torch.no_grad():
@@ -686,9 +811,9 @@ def screen_cross_alleles(sequence: str) -> List[Dict[str, Any]]:
 
 st.markdown("---")
 st.markdown("### 🌐 Pan-Specific Cross-Allele Screening (HLA Restriction)")
-st.markdown("Evaluates whether the candidate peptide binds specifically to the target allele or cross-reacts across the 6 core HLA alleles.")
+st.markdown("Evaluates whether the candidate peptide binds specifically to the target allele or cross-reacts across the 6 core HLA alleles (10-mers dynamically evaluated via per-allele bulge core alignment).")
 
-cross_res = screen_cross_alleles(eval_seq)
+cross_res = screen_cross_alleles(pep_input)
 df_cross = pd.DataFrame(cross_res)
 df_cross["Focus"] = df_cross["Allele"].apply(lambda x: "Active Selected Target" if x == selected_allele else "Other Alleles")
 
@@ -717,12 +842,12 @@ st.altair_chart(cross_chart, use_container_width=True)
 # Benchmark Context & Scientific Provenance
 # -------------------------------------------------------------
 with st.expander("ℹ️ Scientific Validation, Provenance & Clinical Limitations"):
-    st.markdown(f"""
+    st.markdown(rf"""
     **Model & Interpretability Provenance:**
     - **Current Preset:** {selected_preset}
     - **Preset Context:** {preset_data['desc']}
     - **Frozen Checkpoint:** `models/frozen/pan_stability_mlp_frozen.pt` (SHA-256: `9566ac3568afaf800f0ddb55fe82fededc70b9cbecd441278a5436811c695cf6`)
-    - **Anchor Importance Ratio (AIR):** **41.2%** average anchor concentration across test peptides (Target: ≥ 40%; Null random: 22.2%).
+    - **Anchor Importance Ratio (AIR):** **41.2%** average anchor concentration across test peptides (Target: $\ge 40\%$; Null random: 22.2%).
     - **Motif Concordance Score (MCS):** **83.3%** top-2 anchor preference match across 6 core target alleles.
     - **HLA Pocket Overlap (HPO):** **50.0%** overlap with crystallographically validated B/F pocket residues.
     - **Prospective Brain Cancer Validation:** **100.0% (6/6 concordance)** on pre-registered, SHA-256 locked glioma neoantigen protocol.
