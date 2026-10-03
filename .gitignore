@@ -27,3 +27,6 @@ scratch/
 
 # Per-row model predictions (regenerable from models/baseline_model.py)
 models/predictions/
+
+# Foundation-model embedding caches (regenerable via src/embeddings/build.py)
+data/embeddings/
