@@ -345,6 +345,19 @@ streamlit run app.py
 - **Interactive 3D Molecular Complex**: Full 3D interactive structure (via embedded 3Dmol.js) of the peptide bound inside the crystallographic HLA-A*02:01 cleft (PDB: 1DUZ, 1.8 Å) with Pocket B (cyan) and Pocket F (orange) contact residues, cavity surface toggle, and auto-rotation.
 - **Automated Biophysical Rationale**: Dynamic structural explanations (e.g., Pocket B hydrophobic accommodation vs. Lysine charge clash).
 
+### ☁️ Modal Cloud Deployment & GPU Inference (Hackathon Challenge 1: Best Use of Modal)
+Our pipeline includes first-class Modal serverless cloud integration (`modal_app.py`):
+1. **Deploy Live Public Demo to Modal**:
+   ```bash
+   modal deploy modal_app.py
+   # Deploys interactive Streamlit app to a public URL for judges to test on any device
+   ```
+2. **Run Serverless Batch Screening & GPU ESM-2 Foundation Model Inference**:
+   ```bash
+   modal run modal_app.py
+   # Tests serverless parallel prediction and GPU foundation model embeddings
+   ```
+
 ### 🔬 Run Phase-by-Phase
 
 #### 1. Run Automated Unit Tests (36 tests)
