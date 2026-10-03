@@ -100,6 +100,19 @@ class TestQuantitativeMetrics(unittest.TestCase):
         self.assertTrue(report["concordance_hit_rate"] >= 0.80)
         self.assertEqual(report["concordance_hits"], 6)
 
+    def test_structure_viewer(self):
+        """Test 3D structure generation and mutation for HLA-A*02:01 groove."""
+        from src.visualization.structure_viewer import build_pmhc_pdb, generate_3dmol_html
+        pdb_str = build_pmhc_pdb("RMSAPSTGG")
+        self.assertTrue("ARG" in pdb_str)
+        self.assertTrue("MET" in pdb_str)
+        self.assertTrue("SER" in pdb_str)
+        html = generate_3dmol_html(pdb_str, "RMSAPSTGG", show_surface=True)
+        self.assertIn("viewport-container", html)
+        self.assertIn("$3Dmol.createViewer", html)
+        self.assertTrue(len(html) > 1000)
+
 
 if __name__ == "__main__":
     unittest.main()
+

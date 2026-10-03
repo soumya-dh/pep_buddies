@@ -342,6 +342,7 @@ streamlit run app.py
 - **Instant Predictions**: Real-time complex half-life ($T_{1/2}$ hours) and stability classification badges.
 - **Pre-Loaded Clinical Presets**: H3.3 K27M mutant ($0.82\text{ h}$) vs wild-type ($0.50\text{ h}$), EGFRvIII ($0.95\text{ h}$), IL13R$\alpha$2 ($0.62\text{ h}$), and negative controls.
 - **In Silico Deep Mutational Scanning**: Real-time per-position sensitivity bar chart highlighting canonical anchor positions (P2 and P9).
+- **Interactive 3D Molecular Complex**: Full 3D interactive structure (via embedded 3Dmol.js) of the peptide bound inside the crystallographic HLA-A*02:01 cleft (PDB: 1DUZ, 1.8 Å) with Pocket B (cyan) and Pocket F (orange) contact residues, cavity surface toggle, and auto-rotation.
 - **Automated Biophysical Rationale**: Dynamic structural explanations (e.g., Pocket B hydrophobic accommodation vs. Lysine charge clash).
 
 ### 🔬 Run Phase-by-Phase

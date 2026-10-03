@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 import torch
 import streamlit as st
+import streamlit.components.v1 as components
 import altair as alt
 
 # Ensure workspace root is in path
@@ -24,6 +25,7 @@ from models.baseline_model import PanStabilityMLP, one_hot_encode_sequence, AMIN
 from src.hla_database import HLADatabase
 from src.targets import target_to_thalf
 from src.prospective.glioma_lock import find_best_core_for_10mer
+from src.visualization.structure_viewer import build_pmhc_pdb, generate_3dmol_html
 
 # Page configuration
 st.set_page_config(
@@ -307,98 +309,141 @@ if res["bulge_note"]:
     st.info(f"ℹ️ {res['bulge_note']}")
 
 # -------------------------------------------------------------
-# Interactive Sensitivity Bar Chart
 # -------------------------------------------------------------
-st.markdown("### 📊 Per-Position Mutation Sensitivity")
-st.markdown("Measures how drastically mutating each peptide position to all 20 amino acids affects predicted complex stability.")
+# Visualization Tabs: 2D Sensitivity & 3D Molecular Complex
+# -------------------------------------------------------------
+tab_sens, tab_3d = st.tabs(["📊 Per-Position Sensitivity & Biophysics", "🔬 Interactive 3D Binding Structure"])
 
 eval_seq = res["eval_seq"]
-positions = [f"P{i+1}: {eval_seq[i]}" for i in range(len(eval_seq))]
-is_anchor = ["Anchor (Pocket B)" if i == 1 else "Anchor (Pocket F)" if i == len(eval_seq)-1 else "Auxiliary / Non-Anchor" for i in range(len(eval_seq))]
 
-df_chart = pd.DataFrame({
-    "Position": positions,
-    "Position_Num": list(range(1, len(eval_seq) + 1)),
-    "Sensitivity": res["sensitivities"],
-    "Role": is_anchor,
-})
+with tab_sens:
+    st.markdown("### 📊 In Silico Deep Mutational Sensitivity")
+    st.markdown("Measures how drastically mutating each peptide position to all 20 amino acids affects predicted complex stability.")
 
-chart = (
-    alt.Chart(df_chart)
-    .mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
-    .encode(
-        x=alt.X("Position:N", sort=None, title="Peptide Position & Residue"),
-        y=alt.Y("Sensitivity:Q", title="Mean Absolute Delta ΔS"),
-        color=alt.Color(
-            "Role:N",
-            scale=alt.Scale(
-                domain=["Anchor (Pocket B)", "Anchor (Pocket F)", "Auxiliary / Non-Anchor"],
-                range=["#2563eb", "#ea580c", "#94a3b8"],
+    positions = [f"P{i+1}: {eval_seq[i]}" for i in range(len(eval_seq))]
+    is_anchor = ["Anchor (Pocket B)" if i == 1 else "Anchor (Pocket F)" if i == len(eval_seq)-1 else "Auxiliary / Non-Anchor" for i in range(len(eval_seq))]
+
+    df_chart = pd.DataFrame({
+        "Position": positions,
+        "Position_Num": list(range(1, len(eval_seq) + 1)),
+        "Sensitivity": res["sensitivities"],
+        "Role": is_anchor,
+    })
+
+    chart = (
+        alt.Chart(df_chart)
+        .mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
+        .encode(
+            x=alt.X("Position:N", sort=None, title="Peptide Position & Residue"),
+            y=alt.Y("Sensitivity:Q", title="Mean Absolute Delta ΔS"),
+            color=alt.Color(
+                "Role:N",
+                scale=alt.Scale(
+                    domain=["Anchor (Pocket B)", "Anchor (Pocket F)", "Auxiliary / Non-Anchor"],
+                    range=["#2563eb", "#ea580c", "#94a3b8"],
+                ),
+                legend=alt.Legend(title="Residue Role", orient="top"),
             ),
-            legend=alt.Legend(title="Residue Role", orient="top"),
-        ),
-        tooltip=["Position", "Sensitivity", "Role"],
+            tooltip=["Position", "Sensitivity", "Role"],
+        )
+        .properties(height=320)
     )
-    .properties(height=320)
-)
 
-st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart, use_container_width=True)
 
-# -------------------------------------------------------------
-# Automated Biophysical Analysis
-# -------------------------------------------------------------
-st.markdown("### 🔬 Automated Biophysical Pocket Analysis")
+    # Automated Biophysical Analysis
+    st.markdown("### 🔬 Automated Biophysical Pocket Analysis")
 
-def generate_biophysical_notes(sequence: str, allele: str) -> List[str]:
-    notes = []
-    if len(sequence) < 9:
+    def generate_biophysical_notes(sequence: str, allele: str) -> List[str]:
+        notes = []
+        if len(sequence) < 9:
+            return notes
+
+        p2 = sequence[1]
+        p9 = sequence[8] if len(sequence) >= 9 else sequence[-1]
+
+        # Pocket B Analysis
+        if allele == "HLA-A*02:01":
+            if p2 in ["L", "M"]:
+                notes.append(f"**Pocket B (P2 = {p2}):** **Optimal Hydrophobic Fit.** Deep hydrophobic pocket lined by Met45, Ala67, and Val67 comfortably accommodates the aliphatic sidechain of {p2}.")
+            elif p2 in ["I", "V", "A", "T"]:
+                notes.append(f"**Pocket B (P2 = {p2}):** **Tolerated Secondary Anchor.** Hydrophobic pocket accommodates {p2}, though with slightly less depth packing than Leucine or Methionine.")
+            elif p2 in ["K", "R"]:
+                notes.append(f"**Pocket B (P2 = {p2}):** ⚠️ **Severe Electrostatic Repulsion.** Positively charged basic residue introduces a strong electrostatic and steric clash against hydrophobic residues in Pocket B.")
+            elif p2 in ["D", "E"]:
+                notes.append(f"**Pocket B (P2 = {p2}):** ⚠️ **Acidic Charge Clash.** Negative charge is destabilizing inside the uncharged hydrophobic pocket.")
+            elif p2 == "P":
+                notes.append(f"**Pocket B (P2 = P):** ⚠️ **Backbone Rigidity Clash.** Proline introduces a kink that impairs standard HLA-A*02:01 mainchain hydrogen bonding.")
+
+        elif allele == "HLA-B*07:02":
+            if p2 == "P":
+                notes.append(f"**Pocket B (P2 = P):** **Strict Biological Anchor Match!** HLA-B*07:02 strictly requires Proline at P2 to fit its unique constricted pocket geometry.")
+            else:
+                notes.append(f"**Pocket B (P2 = {p2}):** ⚠️ **Non-Proline Penalty.** HLA-B*07:02 strongly penalizes non-proline residues at P2.")
+
+        elif allele == "HLA-A*24:02":
+            if p2 in ["Y", "F"]:
+                notes.append(f"**Pocket B (P2 = {p2}):** **Optimal Aromatic Anchor.** HLA-A*24:02 features a large aromatic pocket that specifically selects for Tyrosine or Phenylalanine.")
+            else:
+                notes.append(f"**Pocket B (P2 = {p2}):** Sub-optimal anchor for HLA-A*24:02 Pocket B (prefers aromatic Y/F).")
+
+        # Pocket F Analysis
+        if allele in ["HLA-A*02:01", "HLA-B*07:02"]:
+            if p9 in ["V", "L"]:
+                notes.append(f"**Pocket F (P9 = {p9}):** **Strong Hydrophobic C-Terminal Anchor.** Hydrophobic sidechain packs tightly into Pocket F (Leu81, Tyr116, Leu123).")
+            elif p9 in ["I", "A", "M", "F"]:
+                notes.append(f"**Pocket F (P9 = {p9}):** **Tolerated C-Terminal Anchor.** Forms stable hydrophobic contacts in Pocket F.")
+            elif p9 == "G":
+                notes.append(f"**Pocket F (P9 = G):** ⚠️ **Missing Anchor Penalty.** Glycine lacks a sidechain and cannot form stabilizing hydrophobic contacts, severely destabilizing the C-terminus.")
+            elif p9 in ["K", "R", "D", "E"]:
+                notes.append(f"**Pocket F (P9 = {p9}):** ⚠️ **Severe Charged Residue Clash.** Polar/charged C-terminus prevents proper burial in the hydrophobic cavity.")
+
         return notes
 
-    p2 = sequence[1]
-    p9 = sequence[8] if len(sequence) >= 9 else sequence[-1]
-
-    # Pocket B Analysis
-    if allele == "HLA-A*02:01":
-        if p2 in ["L", "M"]:
-            notes.append(f"**Pocket B (P2 = {p2}):** **Optimal Hydrophobic Fit.** Deep hydrophobic pocket lined by Met45, Ala67, and Val67 comfortably accommodates the aliphatic sidechain of {p2}.")
-        elif p2 in ["I", "V", "A", "T"]:
-            notes.append(f"**Pocket B (P2 = {p2}):** **Tolerated Secondary Anchor.** Hydrophobic pocket accommodates {p2}, though with slightly less depth packing than Leucine or Methionine.")
-        elif p2 in ["K", "R"]:
-            notes.append(f"**Pocket B (P2 = {p2}):** ⚠️ **Severe Electrostatic Repulsion.** Positively charged basic residue introduces a strong electrostatic and steric clash against hydrophobic residues in Pocket B.")
-        elif p2 in ["D", "E"]:
-            notes.append(f"**Pocket B (P2 = {p2}):** ⚠️ **Acidic Charge Clash.** Negative charge is destabilizing inside the uncharged hydrophobic pocket.")
-        elif p2 == "P":
-            notes.append(f"**Pocket B (P2 = P):** ⚠️ **Backbone Rigidity Clash.** Proline introduces a kink that impairs standard HLA-A*02:01 mainchain hydrogen bonding.")
-
-    elif allele == "HLA-B*07:02":
-        if p2 == "P":
-            notes.append(f"**Pocket B (P2 = P):** **Strict Biological Anchor Match!** HLA-B*07:02 strictly requires Proline at P2 to fit its unique constricted pocket geometry.")
-        else:
-            notes.append(f"**Pocket B (P2 = {p2}):** ⚠️ **Non-Proline Penalty.** HLA-B*07:02 strongly penalizes non-proline residues at P2.")
-
-    elif allele == "HLA-A*24:02":
-        if p2 in ["Y", "F"]:
-            notes.append(f"**Pocket B (P2 = {p2}):** **Optimal Aromatic Anchor.** HLA-A*24:02 features a large aromatic pocket that specifically selects for Tyrosine or Phenylalanine.")
-        else:
-            notes.append(f"**Pocket B (P2 = {p2}):** Sub-optimal anchor for HLA-A*24:02 Pocket B (prefers aromatic Y/F).")
-
-    # Pocket F Analysis
-    if allele in ["HLA-A*02:01", "HLA-B*07:02"]:
-        if p9 in ["V", "L"]:
-            notes.append(f"**Pocket F (P9 = {p9}):** **Strong Hydrophobic C-Terminal Anchor.** Hydrophobic sidechain packs tightly into Pocket F (Leu81, Tyr116, Leu123).")
-        elif p9 in ["I", "A", "M", "F"]:
-            notes.append(f"**Pocket F (P9 = {p9}):** **Tolerated C-Terminal Anchor.** Forms stable hydrophobic contacts in Pocket F.")
-        elif p9 == "G":
-            notes.append(f"**Pocket F (P9 = G):** ⚠️ **Missing Anchor Penalty.** Glycine lacks a sidechain and cannot form stabilizing hydrophobic contacts, severely destabilizing the C-terminus.")
-        elif p9 in ["K", "R", "D", "E"]:
-            notes.append(f"**Pocket F (P9 = {p9}):** ⚠️ **Severe Charged Residue Clash.** Polar/charged C-terminus prevents proper burial in the hydrophobic cavity.")
-
-    return notes
+    notes = generate_biophysical_notes(eval_seq, selected_allele)
+    for note in notes:
+        st.markdown(f'<div class="note-box">{note}</div>', unsafe_allow_html=True)
 
 
-notes = generate_biophysical_notes(eval_seq, selected_allele)
-for note in notes:
-    st.markdown(f'<div class="note-box">{note}</div>', unsafe_allow_html=True)
+with tab_3d:
+    st.markdown("### 🌐 Interactive 3D Peptide-MHC Binding Groove")
+    st.markdown("High-resolution crystallographic structure of the peptide bound inside the MHC Class I binding cleft (PDB: 1DUZ, 1.8 Å resolution).")
+
+    col_ctrl1, col_ctrl2, col_ctrl3 = st.columns(3)
+    with col_ctrl1:
+        show_surface = st.checkbox("Show Semi-Transparent Cavity Surface", value=False)
+    with col_ctrl2:
+        show_contacts = st.checkbox("Highlight Pocket B (Cyan) & F (Orange)", value=True)
+    with col_ctrl3:
+        spin_struct = st.checkbox("Auto-Spin Structure", value=False)
+
+    try:
+        pdb_data = build_pmhc_pdb(eval_seq)
+        html_3d = generate_3dmol_html(
+            pdb_str=pdb_data,
+            peptide_seq=eval_seq,
+            allele=selected_allele,
+            show_surface=show_surface,
+            show_pocket_residues=show_contacts,
+            spin=spin_struct,
+            height=480,
+        )
+        components.html(html_3d, height=500)
+    except Exception as e:
+        st.error(f"Could not render 3D structure: {e}")
+
+    st.markdown("""
+    <div style="font-size: 0.9rem; color: #475569; background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 10px;">
+        <b>3D Structural Mechanics:</b>
+        <ul>
+            <li><b style="color: #2563eb;">Peptide P2 Anchor (Royal Blue):</b> Inserts deep into Pocket B cavity (Met45, Ala67, Val67).</li>
+            <li><b style="color: #ea580c;">Peptide P9 Anchor (Orange):</b> Packs tightly into hydrophobic Pocket F (Leu81, Tyr116, Leu123).</li>
+            <li><b style="color: #10b981;">Peptide P1, P3–P8 (Emerald Green):</b> Solvent-exposed residues accessible to TCR recognition.</li>
+            <li><b>HLA Heavy Chain α₁/α₂ Helices (Silver Ribbon):</b> Flank the peptide to form the binding groove.</li>
+        </ul>
+        <i>Tip: Left-click and drag to rotate the groove; right-click to pan; scroll wheel to zoom into Pocket B or Pocket F.</i>
+    </div>
+    """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------
 # Benchmark Context & Provenance
