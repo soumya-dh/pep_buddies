@@ -1,0 +1,9 @@
+{
+  "n_samples": 250,
+  "error_threshold_75th": 0.21772295153111013,
+  "spearman_sigma_vs_abs_error": 0.2764,
+  "spearman_air_vs_abs_error": 0.0476,
+  "auroc_mc_dropout_sigma": 0.717,
+  "auroc_inverted_air": 0.4745,
+  "auroc_combined_sigma_and_air": 0.6713
+}

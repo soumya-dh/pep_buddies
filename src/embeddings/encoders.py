@@ -21,8 +21,13 @@ end-to-end without pretrained weights; **numbers from a random-init encoder are
 meaningless as results** and are tagged as such in the cache metadata.
 """
 
+import os
 import logging
 from typing import Dict, List, Optional, Sequence
+
+# Default to offline if hub cache is populated to avoid timeout retries in sandboxed environments
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
 import numpy as np
 import torch
@@ -139,18 +144,15 @@ class Esm2Encoder(SequenceEncoder):
     def _load(self) -> None:
         from transformers import AutoConfig, AutoModel, AutoTokenizer
 
-        self._tok = AutoTokenizer.from_pretrained(self.hf_name)
+        local_only = (os.environ.get("TRANSFORMERS_OFFLINE") == "1") or (os.environ.get("HF_HUB_OFFLINE") == "1")
+        self._tok = AutoTokenizer.from_pretrained(self.hf_name, local_files_only=local_only)
+
         # add_pooling_layer=False: we read last_hidden_state, never pooler_output.
-        # Without it, transformers randomly initialises pooler.dense and warns
-        # about missing weights, which looks alarming but is irrelevant here.
-        # The ESM-2 checkpoint's lm_head.* is correctly discarded; every encoder
-        # weight loads.
         if self.random_init:
-            self._model = AutoModel.from_config(
-                AutoConfig.from_pretrained(self.hf_name), add_pooling_layer=False
-            )
+            cfg = AutoConfig.from_pretrained(self.hf_name, local_files_only=local_only)
+            self._model = AutoModel.from_config(cfg, add_pooling_layer=False)
         else:
-            self._model = AutoModel.from_pretrained(self.hf_name, add_pooling_layer=False)
+            self._model = AutoModel.from_pretrained(self.hf_name, add_pooling_layer=False, local_files_only=local_only)
         self._model.to(self.device)
 
     def _encode_batch(self, seqs: Sequence[str]) -> np.ndarray:
