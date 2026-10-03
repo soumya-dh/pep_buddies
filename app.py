@@ -336,15 +336,16 @@ if res["bulge_note"]:
 
 # -------------------------------------------------------------
 # -------------------------------------------------------------
-# Visualization Tabs: 2D Sensitivity & 3D Molecular Complex
+# Dual-Panel Side-by-Side: Sensitivity & 3D Molecular Complex
 # -------------------------------------------------------------
-tab_sens, tab_3d = st.tabs(["📊 Per-Position Sensitivity & Biophysics", "🔬 Interactive 3D Binding Structure"])
-
+st.markdown("---")
 eval_seq = res["eval_seq"]
 
-with tab_sens:
-    st.markdown("### 📊 In Silico Deep Mutational Sensitivity")
-    st.markdown("Measures how drastically mutating each peptide position to all 20 amino acids affects predicted complex stability.")
+col_vis_left, col_vis_right = st.columns([1, 1], gap="medium")
+
+with col_vis_left:
+    st.markdown("### 📊 Per-Position Mutation Sensitivity")
+    st.markdown("Measures how mutating each peptide position across all 20 amino acids affects predicted complex stability.")
 
     positions = [f"P{i+1}: {eval_seq[i]}" for i in range(len(eval_seq))]
     is_anchor = ["Anchor (Pocket B)" if i == 1 else "Anchor (Pocket F)" if i == len(eval_seq)-1 else "Auxiliary / Non-Anchor" for i in range(len(eval_seq))]
@@ -431,25 +432,25 @@ with tab_sens:
         st.markdown(f'<div class="note-box">{note}</div>', unsafe_allow_html=True)
 
 
-with tab_3d:
-    st.markdown("### 🌐 Interactive 3D Peptide-MHC Binding Groove")
-    st.markdown("High-resolution crystallographic structure of the peptide bound inside the MHC Class I binding cleft (PDB: 1DUZ, 1.8 Å resolution).")
+with col_vis_right:
+    st.markdown("### 🔬 Interactive 3D Binding Structure")
+    st.markdown("High-resolution crystallographic MHC cleft (PDB: 1DUZ, 1.8 Å) with synthesized residue sidechains.")
 
-    col_info1, col_info2 = st.columns([2, 1])
+    col_info1, col_info2 = st.columns([3, 2])
     with col_info1:
-        st.markdown(f"**Active 3D Peptide:** `{eval_seq}` ({len(eval_seq)}-mer) bound to `{selected_allele}`")
+        st.markdown(f"**Peptide:** `{eval_seq}` ({len(eval_seq)}-mer) in `{selected_allele}`")
     with col_info2:
         p2_char = eval_seq[1] if len(eval_seq) > 1 else "X"
         p9_char = eval_seq[-1] if len(eval_seq) > 0 else "X"
-        st.markdown(f"**Anchor Conformation:** P2=`{p2_char}`, P9=`{p9_char}`")
+        st.markdown(f"**Anchors:** P2=`{p2_char}`, P9=`{p9_char}`")
 
     col_ctrl1, col_ctrl2, col_ctrl3 = st.columns(3)
     with col_ctrl1:
-        show_surface = st.checkbox("Show Semi-Transparent Cavity Surface", value=False, key=f"surf_{eval_seq}")
+        show_surface = st.checkbox("Cavity Surface", value=False, key=f"surf_{eval_seq}")
     with col_ctrl2:
-        show_contacts = st.checkbox("Highlight Pocket B (Cyan) & F (Orange)", value=True, key=f"cont_{eval_seq}")
+        show_contacts = st.checkbox("Pocket B & F", value=True, key=f"cont_{eval_seq}")
     with col_ctrl3:
-        spin_struct = st.checkbox("Auto-Spin Structure", value=False, key=f"spin_{eval_seq}")
+        spin_struct = st.checkbox("Auto-Spin", value=False, key=f"spin_{eval_seq}")
 
     try:
         pdb_data = build_pmhc_pdb(eval_seq)
@@ -460,9 +461,9 @@ with tab_3d:
             show_surface=show_surface,
             show_pocket_residues=show_contacts,
             spin=spin_struct,
-            height=480,
+            height=420,
         )
-        components.html(html_3d, height=500)
+        components.html(html_3d, height=440)
     except Exception as e:
         st.error(f"Could not render 3D structure: {e}")
 
