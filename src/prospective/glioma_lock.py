@@ -147,12 +147,27 @@ def predict_peptide(
         t_pred = max(0.0, t_pred)
         return t_pred, float(target_to_thalf(t_pred)), peptide
 
-    # 10-mer bulge deletion alignment
-    best_target = -1.0
-    best_thalf = 0.0
-    best_core = peptide[:9]
+    best_core, best_target, _ = find_best_core_for_10mer(model, peptide, hla_pseudoseq, device)
+    return best_target, float(target_to_thalf(best_target)), best_core
 
-    for del_idx in range(3, 8):  # internal positions 4 to 8
+
+def find_best_core_for_10mer(
+    model: nn.Module,
+    peptide: str,
+    hla_pseudoseq: str,
+    device: str = "cpu"
+) -> Tuple[str, float, int]:
+    """
+    Find optimal 9-mer core from a 10-mer by scanning internal bulge positions (indices 3 to 7).
+    Returns (best_core, best_target, best_del_idx).
+    """
+    model.eval()
+    x_hla = one_hot_encode_sequence(hla_pseudoseq, max_len=34)
+    best_target = -1.0
+    best_core = peptide[:9]
+    best_del_pos = 3
+
+    for del_idx in range(3, 8):
         core = peptide[:del_idx] + peptide[del_idx + 1:]
         x_pep = one_hot_encode_sequence(core, max_len=9)
         feat = np.hstack([x_pep, x_hla]).reshape(1, -1)
@@ -161,10 +176,10 @@ def predict_peptide(
         t_pred = max(0.0, t_pred)
         if t_pred > best_target:
             best_target = t_pred
-            best_thalf = float(target_to_thalf(t_pred))
             best_core = core
+            best_del_pos = del_idx
 
-    return best_target, best_thalf, best_core
+    return best_core, best_target, best_del_pos
 
 
 def run_glioma_lock(
