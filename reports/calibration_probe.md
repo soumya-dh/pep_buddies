@@ -1,4 +1,4 @@
-# Calibration Probe: Unseen-Allele Split
+# Calibration Probe: Unseen-Allele Split & Hybrid Ablation
 
 Target: `log10_1p_thalf`. kNN k = 5.
 
@@ -34,6 +34,17 @@ kNN error in estimating an allele's mean target: MAE 0.1925.
 
 Share of MSE removable by a perfect per-allele intercept: **0.4072**. Spread of per-allele bias: 0.3501.
 kNN error in estimating an allele's mean target: MAE 0.1925.
+
+## hybrid (One-Hot Peptide + ESM-2 35M HLA Pocket, n = 3078, 8 alleles)
+
+| Model Featurization | Spearman ρ | Pearson r | RMSE | Offset Error Fraction | Spread of Allele Bias |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Ridge (One-Hot Pseudosequence) | 0.0910 | 0.1873 | 0.5012 | **0.4072** (40.7%) | 0.3501 |
+| Hybrid (One-Hot Pep + ESM-2 Pocket) | 0.2473 | 0.2974 | 0.4800 | **0.1875** (18.8%) | 0.2104 |
+| Pan-MLP (Non-linear Interaction) | 0.4927 | 0.5858 | 0.3582 | **0.2607** (26.1%) | 0.2012 |
+
+**Key Ablation Takeaway:**
+Continuous ESM-2 35M HLA pocket representations cut between-allele baseline shift error from 40.72% to 18.75% of total MSE, directly addressing the allele offset limitation identified by the calibration probe and increasing unseen-allele Spearman ρ from 0.0910 to 0.2473.
 
 ## netmhcstabpan (n = 320, 8 alleles)
 
