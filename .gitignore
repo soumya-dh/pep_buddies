@@ -1,0 +1,26 @@
+# Virtual environment
+venv/
+env/
+.env
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Matplotlib cache
+.matplotlib/
+
+# IDE
+.vscode/
+.idea/
+
+# Large checkpoints / temporary scratch
+scratch/
+*.tar.gz

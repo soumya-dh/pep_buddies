@@ -1,0 +1,66 @@
+[
+  {
+    "allele_raw": "HLA-A*24:02",
+    "allele_netmhc": "HLA-A24:02",
+    "batch_file": "HLA_A2402_batch1.pep",
+    "batch_path": "data/netmhcstabpan_benchmark/batches/HLA_A2402_batch1.pep",
+    "peptide_count": 573,
+    "peptide_length": 9
+  },
+  {
+    "allele_raw": "HLA-A*32:07",
+    "allele_netmhc": "HLA-A32:07",
+    "batch_file": "HLA_A3207_batch1.pep",
+    "batch_path": "data/netmhcstabpan_benchmark/batches/HLA_A3207_batch1.pep",
+    "peptide_count": 364,
+    "peptide_length": 9
+  },
+  {
+    "allele_raw": "HLA-A*68:01",
+    "allele_netmhc": "HLA-A68:01",
+    "batch_file": "HLA_A6801_batch1.pep",
+    "batch_path": "data/netmhcstabpan_benchmark/batches/HLA_A6801_batch1.pep",
+    "peptide_count": 387,
+    "peptide_length": 9
+  },
+  {
+    "allele_raw": "HLA-A*80:01",
+    "allele_netmhc": "HLA-A80:01",
+    "batch_file": "HLA_A8001_batch1.pep",
+    "batch_path": "data/netmhcstabpan_benchmark/batches/HLA_A8001_batch1.pep",
+    "peptide_count": 351,
+    "peptide_length": 9
+  },
+  {
+    "allele_raw": "HLA-B*35:03",
+    "allele_netmhc": "HLA-B35:03",
+    "batch_file": "HLA_B3503_batch1.pep",
+    "batch_path": "data/netmhcstabpan_benchmark/batches/HLA_B3503_batch1.pep",
+    "peptide_count": 376,
+    "peptide_length": 9
+  },
+  {
+    "allele_raw": "HLA-B*40:01",
+    "allele_netmhc": "HLA-B40:01",
+    "batch_file": "HLA_B4001_batch1.pep",
+    "batch_path": "data/netmhcstabpan_benchmark/batches/HLA_B4001_batch1.pep",
+    "peptide_count": 302,
+    "peptide_length": 9
+  },
+  {
+    "allele_raw": "HLA-B*45:01",
+    "allele_netmhc": "HLA-B45:01",
+    "batch_file": "HLA_B4501_batch1.pep",
+    "batch_path": "data/netmhcstabpan_benchmark/batches/HLA_B4501_batch1.pep",
+    "peptide_count": 368,
+    "peptide_length": 9
+  },
+  {
+    "allele_raw": "HLA-B*54:01",
+    "allele_netmhc": "HLA-B54:01",
+    "batch_file": "HLA_B5401_batch1.pep",
+    "batch_path": "data/netmhcstabpan_benchmark/batches/HLA_B5401_batch1.pep",
+    "peptide_count": 357,
+    "peptide_length": 9
+  }
+]

@@ -1,0 +1,120 @@
+{
+  "random": {
+    "train": {
+      "split_name": "train",
+      "num_samples": 22532,
+      "num_alleles": 75,
+      "num_peptides": 5244,
+      "median_thalf_h": 1.1,
+      "mean_thalf_h": 5.45,
+      "stable_count": 9166,
+      "stable_pct": 40.68
+    },
+    "val": {
+      "split_name": "val",
+      "num_samples": 2817,
+      "num_alleles": 74,
+      "num_peptides": 2051,
+      "median_thalf_h": 1.1,
+      "mean_thalf_h": 5.5,
+      "stable_count": 1144,
+      "stable_pct": 40.61
+    },
+    "test": {
+      "split_name": "test",
+      "num_samples": 2817,
+      "num_alleles": 74,
+      "num_peptides": 1994,
+      "median_thalf_h": 1.0,
+      "mean_thalf_h": 5.39,
+      "stable_count": 1145,
+      "stable_pct": 40.65
+    },
+    "total_samples": 28166
+  },
+  "unseen_peptides": {
+    "train": {
+      "split_name": "train",
+      "num_samples": 22622,
+      "num_alleles": 75,
+      "num_peptides": 4506,
+      "median_thalf_h": 1.1,
+      "mean_thalf_h": 5.52,
+      "stable_count": 9242,
+      "stable_pct": 40.85
+    },
+    "val": {
+      "split_name": "val",
+      "num_samples": 2744,
+      "num_alleles": 75,
+      "num_peptides": 563,
+      "median_thalf_h": 1.0,
+      "mean_thalf_h": 5.13,
+      "stable_count": 1091,
+      "stable_pct": 39.76
+    },
+    "test": {
+      "split_name": "test",
+      "num_samples": 2800,
+      "num_alleles": 74,
+      "num_peptides": 564,
+      "median_thalf_h": 1.0,
+      "mean_thalf_h": 5.22,
+      "stable_count": 1122,
+      "stable_pct": 40.07
+    },
+    "total_samples": 28166
+  },
+  "unseen_alleles": {
+    "train": {
+      "split_name": "train",
+      "num_samples": 22840,
+      "num_alleles": 60,
+      "num_peptides": 5502,
+      "median_thalf_h": 1.2,
+      "mean_thalf_h": 5.94,
+      "stable_count": 9910,
+      "stable_pct": 43.39
+    },
+    "val": {
+      "split_name": "val",
+      "num_samples": 2248,
+      "num_alleles": 7,
+      "num_peptides": 1990,
+      "median_thalf_h": 0.6,
+      "mean_thalf_h": 2.31,
+      "stable_count": 621,
+      "stable_pct": 27.62
+    },
+    "test": {
+      "split_name": "test",
+      "num_samples": 3078,
+      "num_alleles": 8,
+      "num_peptides": 2188,
+      "median_thalf_h": 0.7,
+      "mean_thalf_h": 4.1,
+      "stable_count": 924,
+      "stable_pct": 30.02
+    },
+    "total_samples": 28166,
+    "test_alleles": [
+      "HLA-A*24:02",
+      "HLA-A*32:07",
+      "HLA-A*68:01",
+      "HLA-A*80:01",
+      "HLA-B*35:03",
+      "HLA-B*40:01",
+      "HLA-B*45:01",
+      "HLA-B*54:01"
+    ],
+    "val_alleles": [
+      "HLA-A*24:19",
+      "HLA-A*29:02",
+      "HLA-A*68:02",
+      "HLA-B*14:01(C67S)",
+      "HLA-B*15:17",
+      "HLA-B*18:01",
+      "HLA-B*42:02"
+    ]
+  }
+}

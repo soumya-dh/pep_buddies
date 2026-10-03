@@ -1,0 +1,53 @@
+{
+  "random": {
+    "Ridge": {
+      "model_type": "Ridge Regression",
+      "spearman_rho": 0.5909,
+      "pearson_r": 0.5871000289916992,
+      "rmse": 0.2332,
+      "roc_auc": 0.8056
+    },
+    "MLP": {
+      "model_type": "Pan-Specific PyTorch MLP",
+      "spearman_rho": 0.7884,
+      "pearson_r": 0.8133999705314636,
+      "rmse": 0.1684,
+      "roc_auc": 0.9023,
+      "best_val_loss": 0.0291
+    }
+  },
+  "unseen_peptides": {
+    "Ridge": {
+      "model_type": "Ridge Regression",
+      "spearman_rho": 0.5843,
+      "pearson_r": 0.5782999992370605,
+      "rmse": 0.2291,
+      "roc_auc": 0.7986
+    },
+    "MLP": {
+      "model_type": "Pan-Specific PyTorch MLP",
+      "spearman_rho": 0.7544,
+      "pearson_r": 0.7526000142097473,
+      "rmse": 0.1861,
+      "roc_auc": 0.8822,
+      "best_val_loss": 0.0319
+    }
+  },
+  "unseen_alleles": {
+    "Ridge": {
+      "model_type": "Ridge Regression",
+      "spearman_rho": 0.0941,
+      "pearson_r": 0.17389999330043793,
+      "rmse": 0.3004,
+      "roc_auc": 0.5911
+    },
+    "MLP": {
+      "model_type": "Pan-Specific PyTorch MLP",
+      "spearman_rho": 0.4382,
+      "pearson_r": 0.4964999854564667,
+      "rmse": 0.2415,
+      "roc_auc": 0.7717,
+      "best_val_loss": 0.0729
+    }
+  }
+}
