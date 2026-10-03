@@ -462,26 +462,78 @@ with tab_3d:
             spin=spin_struct,
             height=480,
         )
-        components.html(
-            html_3d,
-            height=500,
-            key=f"viewer_3d_{eval_seq}_{selected_allele}_{show_surface}_{show_contacts}_{spin_struct}"
-        )
+        components.html(html_3d, height=500)
     except Exception as e:
         st.error(f"Could not render 3D structure: {e}")
 
-    st.markdown("""
-    <div style="font-size: 0.9rem; color: #475569; background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 10px;">
-        <b>3D Structural Mechanics:</b>
-        <ul>
-            <li><b style="color: #2563eb;">Peptide P2 Anchor (Royal Blue):</b> Inserts deep into Pocket B cavity (Met45, Ala67, Val67).</li>
-            <li><b style="color: #ea580c;">Peptide P9 Anchor (Orange):</b> Packs tightly into hydrophobic Pocket F (Leu81, Tyr116, Leu123).</li>
-            <li><b style="color: #10b981;">Peptide P1, P3–P8 (Emerald Green):</b> Solvent-exposed residues accessible to TCR recognition.</li>
-            <li><b>HLA Heavy Chain α₁/α₂ Helices (Silver Ribbon):</b> Flank the peptide to form the binding groove.</li>
-        </ul>
-        <i>Tip: Left-click and drag to rotate the groove; right-click to pan; scroll wheel to zoom into Pocket B or Pocket F.</i>
-    </div>
-    """, unsafe_allow_html=True)
+    def get_dynamic_structural_mechanics_html(sequence: str, allele: str) -> str:
+        p2 = sequence[1] if len(sequence) > 1 else "X"
+        p9 = sequence[8] if len(sequence) >= 9 else sequence[-1]
+
+        # Pocket B Dynamic Mechanics
+        if allele == "HLA-A*02:01":
+            if p2 == "M":
+                p2_desc = f'<b style="color: #2563eb;">Peptide P2 Anchor ({p2} = Met):</b> Optimal aliphatic packing into hydrophobic Pocket B floor (<span style="color: #06b6d4;">Met45, Ala67, Val67</span>).'
+            elif p2 == "L":
+                p2_desc = f'<b style="color: #2563eb;">Peptide P2 Anchor ({p2} = Leu):</b> Deep hydrophobic insertion into Pocket B (<span style="color: #06b6d4;">Met45, Val67</span>).'
+            elif p2 in ["I", "V", "A", "T"]:
+                p2_desc = f'<b style="color: #2563eb;">Peptide P2 Anchor ({p2}):</b> Tolerated secondary hydrophobic anchor with moderate packing.'
+            elif p2 in ["K", "R"]:
+                p2_desc = f'<b style="color: #dc2626;">⚠️ Peptide P2 Anchor ({p2} = Lys/Arg):</b> <b>Severe Steric & Electrostatic Clash!</b> Long basic sidechain collides with <span style="color: #06b6d4;">Val67 (2.7 Å)</span> and repels the uncharged hydrophobic floor.'
+            elif p2 in ["D", "E"]:
+                p2_desc = f'<b style="color: #dc2626;">⚠️ Peptide P2 Anchor ({p2} = Asp/Glu):</b> Unfavorable acidic charge inside the nonpolar Pocket B cavity.'
+            elif p2 == "P":
+                p2_desc = f'<b style="color: #ea580c;">⚠️ Peptide P2 Anchor (P = Pro):</b> Pyrrolidine ring introduces a backbone kink disrupting standard MHC hydrogen bonding.'
+            else:
+                p2_desc = f'<b style="color: #2563eb;">Peptide P2 Anchor ({p2}):</b> Sub-optimal Pocket B residue for {allele}.'
+        elif allele == "HLA-B*07:02":
+            if p2 == "P":
+                p2_desc = f'<b style="color: #10b981;">Peptide P2 Anchor (P = Pro):</b> <b>Strict Biological Requirement Met!</b> Proline fits the unique constricted geometry of HLA-B*07:02 Pocket B.'
+            else:
+                p2_desc = f'<b style="color: #dc2626;">⚠️ Peptide P2 Anchor ({p2}):</b> Non-proline residue fails the strict stereochemical requirement of HLA-B*07:02 Pocket B.'
+        elif allele == "HLA-A*24:02":
+            if p2 in ["Y", "F"]:
+                p2_desc = f'<b style="color: #2563eb;">Peptide P2 Anchor ({p2}):</b> <b>Optimal Aromatic Fit!</b> Aromatic ring slots into the large hydrophobic cleft of HLA-A*24:02 Pocket B.'
+            else:
+                p2_desc = f'<b style="color: #ea580c;">Peptide P2 Anchor ({p2}):</b> Sub-optimal anchor for HLA-A*24:02 (strongly prefers aromatic Y/F).'
+        else:
+            p2_desc = f'<b style="color: #2563eb;">Peptide P2 Anchor ({p2}):</b> Interacts with {allele} Pocket B cavity.'
+
+        # Pocket F Dynamic Mechanics
+        if allele in ["HLA-A*02:01", "HLA-B*07:02"]:
+            if p9 in ["V", "L", "I", "M", "A"]:
+                p9_desc = f'<b style="color: #ea580c;">Peptide P9 Anchor ({p9}):</b> Hydrophobic C-terminus packs tightly into Pocket F cavity (<span style="color: #f97316;">Leu81, Tyr116, Leu123</span>).'
+            elif p9 == "G":
+                p9_desc = f'<b style="color: #dc2626;">⚠️ Peptide P9 Anchor (G = Gly):</b> <b>Missing Anchor Penalty!</b> Glycine lacks a sidechain; Pocket F remains unoccupied, destabilizing the C-terminal anchor.'
+            elif p9 in ["K", "R", "D", "E"]:
+                p9_desc = f'<b style="color: #dc2626;">⚠️ Peptide P9 Anchor ({p9}):</b> Charged C-terminus cannot be buried inside hydrophobic Pocket F.'
+            else:
+                p9_desc = f'<b style="color: #ea580c;">Peptide P9 Anchor ({p9}):</b> C-terminal orientation in Pocket F.'
+        elif allele == "HLA-A*03:01":
+            if p9 in ["K", "R"]:
+                p9_desc = f'<b style="color: #10b981;">Peptide P9 Anchor ({p9}):</b> <b>Basic Anchor Match!</b> Positively charged residue forms a stabilizing salt bridge with Asp116 in Pocket F.'
+            else:
+                p9_desc = f'<b style="color: #ea580c;">Peptide P9 Anchor ({p9}):</b> Sub-optimal C-terminus for HLA-A*03:01 (prefers basic K/R).'
+        else:
+            p9_desc = f'<b style="color: #ea580c;">Peptide P9 Anchor ({p9}):</b> C-terminal contact in {allele} Pocket F.'
+
+        mid_seq = sequence[2:8] if len(sequence) >= 9 else sequence[1:]
+        p1_char = sequence[0] if len(sequence) >= 1 else ""
+
+        return f"""
+        <div style="font-size: 0.9rem; color: #475569; background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 10px;">
+            <b>Dynamic 3D Structural Mechanics for {allele}:</b>
+            <ul style="margin-top: 6px; padding-left: 20px;">
+                <li>{p2_desc}</li>
+                <li>{p9_desc}</li>
+                <li><b style="color: #10b981;">Peptide P1 ({p1_char}) & P3–P8 ({mid_seq}):</b> Solvent-exposed residues projecting upward for T-cell receptor (TCR) contact.</li>
+                <li><b>HLA Heavy Chain α₁/α₂ Helices (Silver Ribbon):</b> Encloses the peptide floor to establish {allele} stereochemical binding specificity.</li>
+            </ul>
+            <i>Tip: Left-click and drag to rotate the groove; right-click to pan; scroll wheel to zoom into Pocket B or Pocket F.</i>
+        </div>
+        """
+
+    st.markdown(get_dynamic_structural_mechanics_html(eval_seq, selected_allele), unsafe_allow_html=True)
 
 # -------------------------------------------------------------
 # Benchmark Context & Provenance
