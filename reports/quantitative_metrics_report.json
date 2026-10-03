@@ -1,0 +1,469 @@
+{
+  "metric_1_air": {
+    "HLA-A*02:01": {
+      "air": 0.3537,
+      "air_pct": 35.37,
+      "null_air": 0.2222,
+      "null_air_pct": 22.22,
+      "fold_over_null": 1.59,
+      "anchor_positions": [
+        2,
+        9
+      ],
+      "passed": false
+    },
+    "HLA-A*01:01": {
+      "air": 0.5221,
+      "air_pct": 52.21,
+      "null_air": 0.3333,
+      "null_air_pct": 33.33,
+      "fold_over_null": 1.57,
+      "anchor_positions": [
+        2,
+        3,
+        9
+      ],
+      "passed": true
+    },
+    "HLA-A*03:01": {
+      "air": 0.3848,
+      "air_pct": 38.48,
+      "null_air": 0.2222,
+      "null_air_pct": 22.22,
+      "fold_over_null": 1.73,
+      "anchor_positions": [
+        2,
+        9
+      ],
+      "passed": false
+    },
+    "HLA-A*24:02": {
+      "air": 0.4419,
+      "air_pct": 44.19,
+      "null_air": 0.2222,
+      "null_air_pct": 22.22,
+      "fold_over_null": 1.99,
+      "anchor_positions": [
+        2,
+        9
+      ],
+      "passed": false
+    },
+    "HLA-B*07:02": {
+      "air": 0.381,
+      "air_pct": 38.1,
+      "null_air": 0.2222,
+      "null_air_pct": 22.22,
+      "fold_over_null": 1.71,
+      "anchor_positions": [
+        2,
+        9
+      ],
+      "passed": false
+    },
+    "HLA-B*08:01": {
+      "air": 0.3903,
+      "air_pct": 39.03,
+      "null_air": 0.3333,
+      "null_air_pct": 33.33,
+      "fold_over_null": 1.17,
+      "anchor_positions": [
+        3,
+        5,
+        9
+      ],
+      "passed": false
+    }
+  },
+  "metric_2_mcs": {
+    "HLA-A*02:01": {
+      "allele_concordant": true,
+      "concordance_fraction": 1.0,
+      "concordance_pct": 100.0,
+      "anchor_evaluations": [
+        {
+          "position": "P2",
+          "top_model_aas": [
+            "L",
+            "Y"
+          ],
+          "top_model_scores": [
+            0.6496999859809875,
+            0.5945000052452087
+          ],
+          "target_preferred": [
+            "L",
+            "M"
+          ],
+          "target_tolerated": [
+            "I",
+            "V"
+          ],
+          "is_concordant": true
+        },
+        {
+          "position": "P9",
+          "top_model_aas": [
+            "V",
+            "R"
+          ],
+          "top_model_scores": [
+            0.754800021648407,
+            0.7042999863624573
+          ],
+          "target_preferred": [
+            "V",
+            "L"
+          ],
+          "target_tolerated": [
+            "I",
+            "A"
+          ],
+          "is_concordant": true
+        }
+      ]
+    },
+    "HLA-A*01:01": {
+      "allele_concordant": true,
+      "concordance_fraction": 1.0,
+      "concordance_pct": 100.0,
+      "anchor_evaluations": [
+        {
+          "position": "P2",
+          "top_model_aas": [
+            "T",
+            "V"
+          ],
+          "top_model_scores": [
+            0.7329000234603882,
+            0.6287999749183655
+          ],
+          "target_preferred": [
+            "T",
+            "S"
+          ],
+          "target_tolerated": [],
+          "is_concordant": true
+        },
+        {
+          "position": "P3",
+          "top_model_aas": [
+            "D",
+            "C"
+          ],
+          "top_model_scores": [
+            0.8500000238418579,
+            0.5863999724388123
+          ],
+          "target_preferred": [
+            "D",
+            "E"
+          ],
+          "target_tolerated": [],
+          "is_concordant": true
+        },
+        {
+          "position": "P9",
+          "top_model_aas": [
+            "Y",
+            "V"
+          ],
+          "top_model_scores": [
+            0.6394000053405762,
+            0.559499979019165
+          ],
+          "target_preferred": [
+            "Y"
+          ],
+          "target_tolerated": [
+            "F"
+          ],
+          "is_concordant": true
+        }
+      ]
+    },
+    "HLA-A*03:01": {
+      "allele_concordant": true,
+      "concordance_fraction": 1.0,
+      "concordance_pct": 100.0,
+      "anchor_evaluations": [
+        {
+          "position": "P2",
+          "top_model_aas": [
+            "R",
+            "L"
+          ],
+          "top_model_scores": [
+            0.7179999947547913,
+            0.704200029373169
+          ],
+          "target_preferred": [
+            "L",
+            "M",
+            "V"
+          ],
+          "target_tolerated": [
+            "I"
+          ],
+          "is_concordant": true
+        },
+        {
+          "position": "P9",
+          "top_model_aas": [
+            "K",
+            "A"
+          ],
+          "top_model_scores": [
+            0.7648000121116638,
+            0.3783000111579895
+          ],
+          "target_preferred": [
+            "K",
+            "R"
+          ],
+          "target_tolerated": [
+            "Y",
+            "F"
+          ],
+          "is_concordant": true
+        }
+      ]
+    },
+    "HLA-A*24:02": {
+      "allele_concordant": true,
+      "concordance_fraction": 1.0,
+      "concordance_pct": 100.0,
+      "anchor_evaluations": [
+        {
+          "position": "P2",
+          "top_model_aas": [
+            "Y",
+            "W"
+          ],
+          "top_model_scores": [
+            0.9254999756813049,
+            0.597100019454956
+          ],
+          "target_preferred": [
+            "Y",
+            "F"
+          ],
+          "target_tolerated": [
+            "W"
+          ],
+          "is_concordant": true
+        },
+        {
+          "position": "P9",
+          "top_model_aas": [
+            "F",
+            "W"
+          ],
+          "top_model_scores": [
+            0.9595000147819519,
+            0.8763999938964844
+          ],
+          "target_preferred": [
+            "L",
+            "F",
+            "I"
+          ],
+          "target_tolerated": [
+            "M",
+            "V"
+          ],
+          "is_concordant": true
+        }
+      ]
+    },
+    "HLA-B*07:02": {
+      "allele_concordant": true,
+      "concordance_fraction": 1.0,
+      "concordance_pct": 100.0,
+      "anchor_evaluations": [
+        {
+          "position": "P2",
+          "top_model_aas": [
+            "P",
+            "H"
+          ],
+          "top_model_scores": [
+            0.6290000081062317,
+            0.5160999894142151
+          ],
+          "target_preferred": [
+            "P"
+          ],
+          "target_tolerated": [],
+          "is_concordant": true
+        },
+        {
+          "position": "P9",
+          "top_model_aas": [
+            "L",
+            "C"
+          ],
+          "top_model_scores": [
+            0.6445000171661377,
+            0.6251999735832214
+          ],
+          "target_preferred": [
+            "L",
+            "M",
+            "V",
+            "F"
+          ],
+          "target_tolerated": [
+            "I",
+            "A"
+          ],
+          "is_concordant": true
+        }
+      ]
+    },
+    "HLA-B*08:01": {
+      "allele_concordant": false,
+      "concordance_fraction": 0.6667,
+      "concordance_pct": 66.67,
+      "anchor_evaluations": [
+        {
+          "position": "P3",
+          "top_model_aas": [
+            "R",
+            "K"
+          ],
+          "top_model_scores": [
+            0.1421000063419342,
+            0.13169999420642853
+          ],
+          "target_preferred": [
+            "R",
+            "K"
+          ],
+          "target_tolerated": [],
+          "is_concordant": true
+        },
+        {
+          "position": "P5",
+          "top_model_aas": [
+            "R",
+            "C"
+          ],
+          "top_model_scores": [
+            0.1436000019311905,
+            0.13500000536441803
+          ],
+          "target_preferred": [
+            "R",
+            "K"
+          ],
+          "target_tolerated": [],
+          "is_concordant": true
+        },
+        {
+          "position": "P9",
+          "top_model_aas": [
+            "R",
+            "H"
+          ],
+          "top_model_scores": [
+            0.15230000019073486,
+            0.15080000460147858
+          ],
+          "target_preferred": [
+            "L",
+            "I",
+            "V"
+          ],
+          "target_tolerated": [
+            "F",
+            "M"
+          ],
+          "is_concordant": false
+        }
+      ]
+    }
+  },
+  "metric_3_hpo": {
+    "hpo": 0.65,
+    "hpo_pct": 65.0,
+    "null_hpo": 0.1056,
+    "null_hpo_pct": 10.56,
+    "overlap_count": 13,
+    "top_n": 20,
+    "overlapping_residues": [
+      9,
+      63,
+      66,
+      70,
+      73,
+      77,
+      80,
+      95,
+      97,
+      99,
+      116,
+      143,
+      147
+    ],
+    "top_model_residues": [
+      143,
+      147,
+      99,
+      9,
+      70,
+      73,
+      167,
+      63,
+      97,
+      152,
+      118,
+      80,
+      74,
+      66,
+      95,
+      171,
+      114,
+      76,
+      77,
+      116
+    ],
+    "validated_pocket_residues": [
+      9,
+      45,
+      63,
+      66,
+      67,
+      70,
+      73,
+      77,
+      80,
+      81,
+      84,
+      95,
+      97,
+      99,
+      116,
+      123,
+      143,
+      146,
+      147
+    ],
+    "passed": true
+  },
+  "summary": {
+    "mean_air": 0.4123,
+    "mean_air_pct": 41.23,
+    "air_success_target_pct": 40.0,
+    "air_success": true,
+    "mcs_concordance_rate": 0.8333,
+    "mcs_concordance_rate_pct": 83.33,
+    "mcs_success_target_pct": 80.0,
+    "mcs_success": true,
+    "hpo_overlap_count": 13,
+    "hpo_pct": 65.0,
+    "hpo_success_target_pct": 40.0,
+    "hpo_success": true,
+    "all_metrics_passed": true
+  }
+}
