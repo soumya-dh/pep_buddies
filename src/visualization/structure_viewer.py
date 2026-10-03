@@ -321,7 +321,7 @@ def generate_3dmol_html(
             opacity: 0.35,
             wireframe: true
         });
-        viewer.addLabel("⚠️ 2.7 Å Clash to Val67", {
+        viewer.addLabel("⚠️ Illustrative Clash to Val67", {
             fontSize: 12,
             fontColor: "#ffffff",
             backgroundColor: "#dc2626",

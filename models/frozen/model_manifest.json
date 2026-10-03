@@ -2,7 +2,7 @@
   "model_name": "PanStabilityMLP",
   "frozen_weights_path": "models/frozen/pan_stability_mlp_frozen.pt",
   "sha256_hash": "9566ac3568afaf800f0ddb55fe82fededc70b9cbecd441278a5436811c695cf6",
-  "frozen_timestamp_utc": "2026-10-03T16:46:29.541832+00:00",
+  "frozen_timestamp_utc": "2026-10-03T16:57:02.743667+00:00",
   "input_features": "Peptide 9x20 one-hot + HLA Pocket 34x20 one-hot (860 dims)",
   "target": "canonical log10(1 + thalf_hours)",
   "source_checkpoint": "models/checkpoints/random/mlp_baseline.pt",
