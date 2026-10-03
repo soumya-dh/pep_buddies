@@ -19,6 +19,10 @@ from sklearn.metrics import (
     mean_squared_error, mean_absolute_error, r2_score
 )
 
+from src.targets import (
+    STABILITY_THRESHOLD_HOURS, TARGET_LABEL, TARGET_NAME, thalf_to_target
+)
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -39,43 +43,65 @@ plt.rcParams.update({
 
 def compute_metrics(
     y_true_thalf: np.ndarray,
-    y_pred_thalf: np.ndarray,
-    y_true_score: Optional[np.ndarray] = None,
-    y_pred_score: Optional[np.ndarray] = None,
-    stability_threshold_hours: float = 2.0
+    y_pred_thalf: Optional[np.ndarray] = None,
+    stability_threshold_hours: float = STABILITY_THRESHOLD_HOURS,
+    y_pred_target: Optional[np.ndarray] = None
 ) -> Dict[str, Any]:
     """
-    Compute comprehensive immuno-oncology metrics.
+    Canonical metrics for peptide-HLA stability prediction.
+
+    ``y_true_thalf`` is always half-lives in hours. Predictions are supplied either
+    as hours (``y_pred_thalf``) or already on the canonical target scale
+    (``y_pred_target``); every correlation and error metric is computed on the
+    single canonical target ``log10(1 + thalf)`` (see ``src/targets.py``).
+    Previously Spearman was computed on raw hours, Pearson on ``stability_score``
+    and RMSE on ``stability_score``, so the three numbers in one results row were
+    not on a common scale.
+
+    Pass ``y_pred_target`` when predictions may fall below zero on the target
+    scale. Routing those through hours would clip them at 0 (a negative target
+    implies a negative half-life), collapsing distinct values into ties and
+    silently changing rank metrics. Real models should use ``y_pred_thalf``, where
+    that clipping is the physically correct behaviour.
+
+    Spearman and the AUCs are unchanged by the transform (it is monotone); Pearson,
+    RMSE, MAE and R^2 are now all on the target scale and therefore comparable
+    across models.
     """
+    if (y_pred_thalf is None) == (y_pred_target is None):
+        raise ValueError("pass exactly one of y_pred_thalf or y_pred_target")
+
     y_true_thalf = np.asarray(y_true_thalf, dtype=float)
-    y_pred_thalf = np.asarray(y_pred_thalf, dtype=float)
-    
-    if y_true_score is None:
-        y_true_score = 1.0 / (1.0 + 5.0 / np.maximum(y_true_thalf, 1e-4))
-    if y_pred_score is None:
-        y_pred_score = 1.0 / (1.0 + 5.0 / np.maximum(y_pred_thalf, 1e-4))
-        
+    y_true = thalf_to_target(y_true_thalf)
+    y_pred = (
+        np.asarray(y_pred_target, dtype=float)
+        if y_pred_target is not None
+        else thalf_to_target(np.asarray(y_pred_thalf, dtype=float))
+    )
+
     y_true_binary = (y_true_thalf >= stability_threshold_hours).astype(int)
-    
-    # Correlations
-    sp_rho, sp_p = spearmanr(y_true_thalf, y_pred_thalf)
-    pe_r, pe_p = pearsonr(y_true_score, y_pred_score)
-    
-    # Errors on score
-    rmse = np.sqrt(mean_squared_error(y_true_score, y_pred_score))
-    mae = mean_absolute_error(y_true_score, y_pred_score)
-    r2 = r2_score(y_true_score, y_pred_score)
-    
-    # Binary classification
+
+    # Correlations -- both on the canonical target
+    sp_rho, sp_p = spearmanr(y_true, y_pred)
+    pe_r, pe_p = pearsonr(y_true, y_pred)
+
+    # Errors -- all on the canonical target
+    rmse = np.sqrt(mean_squared_error(y_true, y_pred))
+    mae = mean_absolute_error(y_true, y_pred)
+    r2 = r2_score(y_true, y_pred)
+
+    # Binary classification; the predicted target is a monotone score, so the AUCs
+    # are invariant to the transform.
     has_pos_neg = (len(np.unique(y_true_binary)) > 1)
     if has_pos_neg:
-        roc_auc = roc_auc_score_val = roc_auc_score(y_true_binary, y_pred_score)
-        pr_auc = average_precision_score(y_true_binary, y_pred_score)
+        roc_auc = roc_auc_score(y_true_binary, y_pred)
+        pr_auc = average_precision_score(y_true_binary, y_pred)
     else:
         roc_auc = 0.5
         pr_auc = 0.0
-        
+
     return {
+        "target": TARGET_NAME,
         "n_samples": int(len(y_true_thalf)),
         "spearman_rho": float(round(sp_rho, 4)),
         "spearman_pvalue": float(sp_p),
@@ -87,6 +113,103 @@ def compute_metrics(
         "roc_auc": float(round(roc_auc, 4)),
         "pr_auc": float(round(pr_auc, 4)),
         "stability_threshold_hours": stability_threshold_hours
+    }
+
+
+def _spread_summary(vals: List[float]) -> Optional[Dict[str, float]]:
+    """Median / mean / IQR summary of a list of per-allele statistics."""
+    if not vals:
+        return None
+    arr = np.asarray(vals, dtype=float)
+    return {
+        "median": float(round(float(np.median(arr)), 4)),
+        "mean": float(round(float(arr.mean()), 4)),
+        "std": float(round(float(arr.std(ddof=1)), 4)) if len(arr) > 1 else 0.0,
+        "iqr_low": float(round(float(np.percentile(arr, 25)), 4)),
+        "iqr_high": float(round(float(np.percentile(arr, 75)), 4)),
+        "min": float(round(float(arr.min()), 4)),
+        "max": float(round(float(arr.max()), 4)),
+    }
+
+
+def compute_per_allele_metrics(
+    alleles: np.ndarray,
+    y_true_thalf: np.ndarray,
+    y_pred_thalf: Optional[np.ndarray] = None,
+    min_samples: int = 10,
+    stability_threshold_hours: float = STABILITY_THRESHOLD_HOURS,
+    y_pred_target: Optional[np.ndarray] = None
+) -> Dict[str, Any]:
+    """
+    Per-allele correlations, plus their median across alleles.
+
+    Pooled Spearman on a held-out-allele test set is inflated by between-allele
+    differences in mean stability: a model that learns only "allele X is generally
+    unstable" scores respectably without having learned any peptide preference.
+    Taking the median of the per-allele correlations removes that between-allele
+    variance, and is the honest measure of pan-specific performance.
+
+    Alleles with fewer than ``min_samples`` rows, or with no variance in either the
+    ground truth or the prediction, are still listed but excluded from the median.
+    """
+    if (y_pred_thalf is None) == (y_pred_target is None):
+        raise ValueError("pass exactly one of y_pred_thalf or y_pred_target")
+
+    alleles = np.asarray(alleles)
+    y_true_thalf = np.asarray(y_true_thalf, dtype=float)
+    # See compute_metrics: y_pred_target avoids clipping negative targets to ties.
+    y_pred_all = (
+        np.asarray(y_pred_target, dtype=float)
+        if y_pred_target is not None
+        else thalf_to_target(np.asarray(y_pred_thalf, dtype=float))
+    )
+
+    per_allele: Dict[str, Any] = {}
+    usable_rho: List[float] = []
+    usable_r: List[float] = []
+
+    for allele in sorted(set(alleles.tolist())):
+        mask = (alleles == allele)
+        n = int(mask.sum())
+        yt = thalf_to_target(y_true_thalf[mask])
+        yp = y_pred_all[mask]
+
+        if (n < min_samples) or (np.std(yt) == 0) or (np.std(yp) == 0):
+            per_allele[str(allele)] = {
+                "n_samples": n,
+                "spearman_rho": None,
+                "pearson_r": None,
+                "rmse": float(round(float(np.sqrt(mean_squared_error(yt, yp))), 4)) if n else None,
+                "excluded_from_median": True,
+            }
+            continue
+
+        rho, _ = spearmanr(yt, yp)
+        r, _ = pearsonr(yt, yp)
+        yb = (y_true_thalf[mask] >= stability_threshold_hours).astype(int)
+        auc_val = (
+            float(round(float(roc_auc_score(yb, yp)), 4))
+            if len(np.unique(yb)) > 1 else None
+        )
+
+        per_allele[str(allele)] = {
+            "n_samples": n,
+            "spearman_rho": float(round(float(rho), 4)),
+            "pearson_r": float(round(float(r), 4)),
+            "rmse": float(round(float(np.sqrt(mean_squared_error(yt, yp))), 4)),
+            "roc_auc": auc_val,
+            "excluded_from_median": False,
+        }
+        usable_rho.append(float(rho))
+        usable_r.append(float(r))
+
+    return {
+        "target": TARGET_NAME,
+        "n_alleles_total": int(len(per_allele)),
+        "n_alleles_scored": int(len(usable_rho)),
+        "spearman_rho_across_alleles": _spread_summary(usable_rho),
+        "pearson_r_across_alleles": _spread_summary(usable_r),
+        "per_allele": per_allele,
     }
 
 
@@ -212,7 +335,7 @@ def plot_benchmark_results(
     stat_text = (
         f"Spearman $\\rho$: {metrics.get('spearman_rho', 0):.3f}\n"
         f"Pearson $r$: {metrics.get('pearson_r', 0):.3f}\n"
-        f"RMSE (score): {metrics.get('rmse', metrics.get('rmse_stability_score', 0)):.3f}\n"
+        f"RMSE ({TARGET_LABEL}): {metrics.get('rmse', 0):.3f}\n"
         f"ROC-AUC: {metrics.get('roc_auc', 0):.3f}\n"
         f"N = {len(merged_df):,}"
     )

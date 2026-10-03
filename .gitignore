@@ -24,3 +24,6 @@ Thumbs.db
 # Large checkpoints / temporary scratch
 scratch/
 *.tar.gz
+
+# Per-row model predictions (regenerable from models/baseline_model.py)
+models/predictions/

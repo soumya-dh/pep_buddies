@@ -1,0 +1,540 @@
+{
+  "target": "log10_1p_thalf",
+  "subset": {
+    "n_pairs": 320,
+    "n_alleles": 8,
+    "alleles": [
+      "HLA-A*24:02",
+      "HLA-A*32:07",
+      "HLA-A*68:01",
+      "HLA-A*80:01",
+      "HLA-B*35:03",
+      "HLA-B*40:01",
+      "HLA-B*45:01",
+      "HLA-B*54:01"
+    ],
+    "source": "predictions.csv",
+    "pairs_per_allele": {
+      "HLA-A*24:02": 40,
+      "HLA-A*32:07": 40,
+      "HLA-A*68:01": 40,
+      "HLA-A*80:01": 40,
+      "HLA-B*35:03": 40,
+      "HLA-B*40:01": 40,
+      "HLA-B*45:01": 40,
+      "HLA-B*54:01": 40
+    }
+  },
+  "models": {
+    "netmhcstabpan": {
+      "subset": {
+        "model": "NetMHCstabpan-1.0",
+        "target": "log10_1p_thalf",
+        "n_samples": 320,
+        "spearman_rho": 0.8537,
+        "spearman_pvalue": 3.980266566585574e-92,
+        "pearson_r": 0.87,
+        "pearson_pvalue": 1.1824640273273598e-99,
+        "rmse": 0.2433,
+        "mae": 0.1656,
+        "r2_score": 0.704,
+        "roc_auc": 0.9323,
+        "pr_auc": 0.8989,
+        "stability_threshold_hours": 2.0,
+        "per_allele": {
+          "target": "log10_1p_thalf",
+          "n_alleles_total": 8,
+          "n_alleles_scored": 8,
+          "spearman_rho_across_alleles": {
+            "median": 0.7563,
+            "mean": 0.7348,
+            "std": 0.1612,
+            "iqr_low": 0.65,
+            "iqr_high": 0.8603,
+            "min": 0.4949,
+            "max": 0.9095
+          },
+          "pearson_r_across_alleles": {
+            "median": 0.7755,
+            "mean": 0.7333,
+            "std": 0.214,
+            "iqr_low": 0.6847,
+            "iqr_high": 0.8506,
+            "min": 0.2694,
+            "max": 0.9509
+          },
+          "per_allele": {
+            "HLA-A*24:02": {
+              "n_samples": 40,
+              "spearman_rho": 0.8455,
+              "pearson_r": 0.8286,
+              "rmse": 0.3163,
+              "roc_auc": 0.9449,
+              "excluded_from_median": false
+            },
+            "HLA-A*32:07": {
+              "n_samples": 40,
+              "spearman_rho": 0.9047,
+              "pearson_r": 0.9165,
+              "rmse": 0.3591,
+              "roc_auc": 0.9505,
+              "excluded_from_median": false
+            },
+            "HLA-A*68:01": {
+              "n_samples": 40,
+              "spearman_rho": 0.9095,
+              "pearson_r": 0.9509,
+              "rmse": 0.3212,
+              "roc_auc": 1.0,
+              "excluded_from_median": false
+            },
+            "HLA-A*80:01": {
+              "n_samples": 40,
+              "spearman_rho": 0.5166,
+              "pearson_r": 0.6944,
+              "rmse": 0.0947,
+              "roc_auc": 0.9231,
+              "excluded_from_median": false
+            },
+            "HLA-B*35:03": {
+              "n_samples": 40,
+              "spearman_rho": 0.7207,
+              "pearson_r": 0.7289,
+              "rmse": 0.1946,
+              "roc_auc": 0.8732,
+              "excluded_from_median": false
+            },
+            "HLA-B*40:01": {
+              "n_samples": 40,
+              "spearman_rho": 0.6944,
+              "pearson_r": 0.6553,
+              "rmse": 0.1148,
+              "roc_auc": 0.6771,
+              "excluded_from_median": false
+            },
+            "HLA-B*45:01": {
+              "n_samples": 40,
+              "spearman_rho": 0.4949,
+              "pearson_r": 0.2694,
+              "rmse": 0.1942,
+              "roc_auc": 0.0513,
+              "excluded_from_median": false
+            },
+            "HLA-B*54:01": {
+              "n_samples": 40,
+              "spearman_rho": 0.7919,
+              "pearson_r": 0.8221,
+              "rmse": 0.2085,
+              "roc_auc": 0.8652,
+              "excluded_from_median": false
+            }
+          }
+        }
+      },
+      "full_test": null,
+      "full_test_note": "NetMHCstabpan was only queried for the subset pairs, so it has no full-test-set number. Any comparison against a full-test number for another model is invalid."
+    },
+    "mlp": {
+      "n_runs": 5,
+      "subset": {
+        "model": "mlp",
+        "target": "log10_1p_thalf",
+        "n_seeds": 5,
+        "n_samples": 320,
+        "spearman_rho": {
+          "mean": 0.4318,
+          "std": 0.0327,
+          "values": [
+            0.3857,
+            0.4727,
+            0.4483,
+            0.4179,
+            0.4344
+          ]
+        },
+        "pearson_r": {
+          "mean": 0.5264,
+          "std": 0.0512,
+          "values": [
+            0.471,
+            0.6014,
+            0.5397,
+            0.4868,
+            0.5332
+          ]
+        },
+        "rmse": {
+          "mean": 0.3859,
+          "std": 0.0173,
+          "values": [
+            0.4022,
+            0.3626,
+            0.3793,
+            0.404,
+            0.3815
+          ]
+        },
+        "mae": {
+          "mean": 0.2881,
+          "std": 0.0133,
+          "values": [
+            0.3076,
+            0.275,
+            0.28,
+            0.2958,
+            0.2821
+          ]
+        },
+        "r2_score": {
+          "mean": 0.2537,
+          "std": 0.0666,
+          "values": [
+            0.1908,
+            0.3422,
+            0.2802,
+            0.1836,
+            0.2717
+          ]
+        },
+        "roc_auc": {
+          "mean": 0.7733,
+          "std": 0.018,
+          "values": [
+            0.7469,
+            0.7941,
+            0.7839,
+            0.7666,
+            0.7749
+          ]
+        },
+        "pr_auc": {
+          "mean": 0.5961,
+          "std": 0.0448,
+          "values": [
+            0.5334,
+            0.6466,
+            0.6076,
+            0.5697,
+            0.6231
+          ]
+        },
+        "per_allele_spearman_median": {
+          "mean": 0.5504,
+          "std": 0.0477,
+          "values": [
+            0.5428,
+            0.5406,
+            0.5889,
+            0.6,
+            0.4796
+          ]
+        }
+      },
+      "full_test": {
+        "model": "mlp",
+        "target": "log10_1p_thalf",
+        "n_seeds": 5,
+        "n_samples": 3078,
+        "spearman_rho": {
+          "mean": 0.4847,
+          "std": 0.0334,
+          "values": [
+            0.4479,
+            0.5124,
+            0.5219,
+            0.454,
+            0.4875
+          ]
+        },
+        "pearson_r": {
+          "mean": 0.5725,
+          "std": 0.0465,
+          "values": [
+            0.5327,
+            0.6205,
+            0.6076,
+            0.515,
+            0.5868
+          ]
+        },
+        "rmse": {
+          "mean": 0.3627,
+          "std": 0.0174,
+          "values": [
+            0.3734,
+            0.3488,
+            0.3477,
+            0.3878,
+            0.3558
+          ]
+        },
+        "mae": {
+          "mean": 0.266,
+          "std": 0.0122,
+          "values": [
+            0.2798,
+            0.262,
+            0.2507,
+            0.2772,
+            0.2604
+          ]
+        },
+        "r2_score": {
+          "mean": 0.3068,
+          "std": 0.0671,
+          "values": [
+            0.2667,
+            0.3601,
+            0.3641,
+            0.2092,
+            0.3341
+          ]
+        },
+        "roc_auc": {
+          "mean": 0.7981,
+          "std": 0.0151,
+          "values": [
+            0.782,
+            0.8091,
+            0.8131,
+            0.7819,
+            0.8043
+          ]
+        },
+        "pr_auc": {
+          "mean": 0.6484,
+          "std": 0.0444,
+          "values": [
+            0.6171,
+            0.6859,
+            0.6716,
+            0.5862,
+            0.6814
+          ]
+        },
+        "per_allele_spearman_median": {
+          "mean": 0.5237,
+          "std": 0.0676,
+          "values": [
+            0.4569,
+            0.5767,
+            0.5963,
+            0.5393,
+            0.4494
+          ]
+        }
+      }
+    },
+    "ridge": {
+      "n_runs": 1,
+      "subset": {
+        "model": "ridge",
+        "target": "log10_1p_thalf",
+        "n_samples": 320,
+        "spearman_rho": 0.0474,
+        "spearman_pvalue": 0.3976731356531973,
+        "pearson_r": 0.1502,
+        "pearson_pvalue": 0.007114078334059842,
+        "rmse": 0.5187,
+        "mae": 0.4243,
+        "r2_score": -0.346,
+        "roc_auc": 0.573,
+        "pr_auc": 0.3387,
+        "stability_threshold_hours": 2.0,
+        "per_allele": {
+          "target": "log10_1p_thalf",
+          "n_alleles_total": 8,
+          "n_alleles_scored": 8,
+          "spearman_rho_across_alleles": {
+            "median": 0.1312,
+            "mean": 0.1508,
+            "std": 0.192,
+            "iqr_low": 0.0673,
+            "iqr_high": 0.2367,
+            "min": -0.1505,
+            "max": 0.5101
+          },
+          "pearson_r_across_alleles": {
+            "median": 0.1176,
+            "mean": 0.117,
+            "std": 0.2609,
+            "iqr_low": -0.0233,
+            "iqr_high": 0.2365,
+            "min": -0.3132,
+            "max": 0.5784
+          },
+          "per_allele": {
+            "HLA-A*24:02": {
+              "n_samples": 40,
+              "spearman_rho": 0.5101,
+              "pearson_r": 0.5784,
+              "rmse": 0.477,
+              "roc_auc": 0.8246,
+              "excluded_from_median": false
+            },
+            "HLA-A*32:07": {
+              "n_samples": 40,
+              "spearman_rho": 0.2338,
+              "pearson_r": 0.2646,
+              "rmse": 0.5859,
+              "roc_auc": 0.6566,
+              "excluded_from_median": false
+            },
+            "HLA-A*68:01": {
+              "n_samples": 40,
+              "spearman_rho": 0.2454,
+              "pearson_r": 0.2271,
+              "rmse": 0.5907,
+              "roc_auc": 0.5707,
+              "excluded_from_median": false
+            },
+            "HLA-A*80:01": {
+              "n_samples": 40,
+              "spearman_rho": 0.1471,
+              "pearson_r": 0.1501,
+              "rmse": 0.8443,
+              "roc_auc": 0.4103,
+              "excluded_from_median": false
+            },
+            "HLA-B*35:03": {
+              "n_samples": 40,
+              "spearman_rho": 0.0229,
+              "pearson_r": -0.0184,
+              "rmse": 0.468,
+              "roc_auc": 0.5342,
+              "excluded_from_median": false
+            },
+            "HLA-B*40:01": {
+              "n_samples": 40,
+              "spearman_rho": -0.1505,
+              "pearson_r": -0.3132,
+              "rmse": 0.3274,
+              "roc_auc": 0.4306,
+              "excluded_from_median": false
+            },
+            "HLA-B*45:01": {
+              "n_samples": 40,
+              "spearman_rho": 0.1152,
+              "pearson_r": -0.0379,
+              "rmse": 0.2247,
+              "roc_auc": 0.1923,
+              "excluded_from_median": false
+            },
+            "HLA-B*54:01": {
+              "n_samples": 40,
+              "spearman_rho": 0.0821,
+              "pearson_r": 0.0851,
+              "rmse": 0.3784,
+              "roc_auc": 0.5047,
+              "excluded_from_median": false
+            }
+          }
+        }
+      },
+      "full_test": {
+        "model": "ridge",
+        "target": "log10_1p_thalf",
+        "n_samples": 3078,
+        "spearman_rho": 0.0967,
+        "spearman_pvalue": 7.645886247920706e-08,
+        "pearson_r": 0.1881,
+        "pearson_pvalue": 6.635985729672203e-26,
+        "rmse": 0.502,
+        "mae": 0.4089,
+        "r2_score": -0.3253,
+        "roc_auc": 0.5946,
+        "pr_auc": 0.3839,
+        "stability_threshold_hours": 2.0,
+        "per_allele": {
+          "target": "log10_1p_thalf",
+          "n_alleles_total": 8,
+          "n_alleles_scored": 8,
+          "spearman_rho_across_alleles": {
+            "median": 0.1402,
+            "mean": 0.1585,
+            "std": 0.1913,
+            "iqr_low": 0.0427,
+            "iqr_high": 0.2579,
+            "min": -0.0776,
+            "max": 0.5065
+          },
+          "pearson_r_across_alleles": {
+            "median": 0.1553,
+            "mean": 0.1696,
+            "std": 0.2132,
+            "iqr_low": 0.0607,
+            "iqr_high": 0.2971,
+            "min": -0.1218,
+            "max": 0.5172
+          },
+          "per_allele": {
+            "HLA-A*24:02": {
+              "n_samples": 573,
+              "spearman_rho": 0.5065,
+              "pearson_r": 0.5172,
+              "rmse": 0.4699,
+              "roc_auc": 0.7619,
+              "excluded_from_median": false
+            },
+            "HLA-A*32:07": {
+              "n_samples": 364,
+              "spearman_rho": 0.2865,
+              "pearson_r": 0.3419,
+              "rmse": 0.5336,
+              "roc_auc": 0.6898,
+              "excluded_from_median": false
+            },
+            "HLA-A*68:01": {
+              "n_samples": 387,
+              "spearman_rho": 0.0964,
+              "pearson_r": 0.1177,
+              "rmse": 0.579,
+              "roc_auc": 0.5461,
+              "excluded_from_median": false
+            },
+            "HLA-A*80:01": {
+              "n_samples": 351,
+              "spearman_rho": 0.2484,
+              "pearson_r": 0.2821,
+              "rmse": 0.8202,
+              "roc_auc": 0.7908,
+              "excluded_from_median": false
+            },
+            "HLA-B*35:03": {
+              "n_samples": 376,
+              "spearman_rho": -0.0776,
+              "pearson_r": -0.0817,
+              "rmse": 0.4197,
+              "roc_auc": 0.4892,
+              "excluded_from_median": false
+            },
+            "HLA-B*40:01": {
+              "n_samples": 302,
+              "spearman_rho": -0.0493,
+              "pearson_r": -0.1218,
+              "rmse": 0.3548,
+              "roc_auc": 0.4756,
+              "excluded_from_median": false
+            },
+            "HLA-B*45:01": {
+              "n_samples": 368,
+              "spearman_rho": 0.1841,
+              "pearson_r": 0.1929,
+              "rmse": 0.2622,
+              "roc_auc": 0.6693,
+              "excluded_from_median": false
+            },
+            "HLA-B*54:01": {
+              "n_samples": 357,
+              "spearman_rho": 0.0734,
+              "pearson_r": 0.1082,
+              "rmse": 0.3745,
+              "roc_auc": 0.5835,
+              "excluded_from_median": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

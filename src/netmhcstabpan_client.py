@@ -198,65 +198,50 @@ def evaluate_benchmark(
     stability_threshold_hours: float = 2.0
 ) -> Dict[str, Any]:
     """
-    Compute rigorous immuno-oncology benchmark metrics comparing
-    NetMHCstabpan predictions against experimental ground truth.
+    Compute benchmark metrics comparing NetMHCstabpan predictions against
+    experimental ground truth.
+
+    Metrics are delegated to ``src.evaluate.compute_metrics`` so NetMHCstabpan is
+    scored on exactly the same canonical target and conventions as our own models.
+    This function previously computed its own Spearman (on hours), Pearson (on
+    ``stability_score``) and RMSE (on ``stability_score``), which did not match
+    either each other or the baseline models' metrics.
     """
-    from scipy.stats import spearmanr, pearsonr
-    from sklearn.metrics import roc_auc_score, average_precision_score, mean_squared_error, mean_absolute_error
-    
+    from src.evaluate import compute_metrics, compute_per_allele_metrics
+
     # Standardize allele names for joining
     test = test_df.copy()
     pred = pred_df.copy()
-    
+
     test["allele_join"] = test["allele"].astype(str).str.replace("*", "").str.replace("HLA-", "")
     pred["allele_join"] = pred["allele"].astype(str).str.replace("*", "").str.replace("HLA-", "")
-    
+
     # Join on allele_join and peptide
     merged = pd.merge(test, pred, on=["allele_join", "peptide"], suffixes=("_exp", "_pred"))
-    
+
     if merged.empty:
         # Fallback join on peptide only if single allele
         merged = pd.merge(test, pred, on=["peptide"], suffixes=("_exp", "_pred"))
-        
+
     logger.info(f"Evaluating benchmark on {len(merged)} matched predictions.")
-    
+
     y_true_thalf = merged["thalf_hours"].values
-    y_true_score = merged["stability_score"].values if "stability_score" in merged.columns else (1.0 / (1.0 + 5.0 / y_true_thalf))
-    y_true_binary = (y_true_thalf >= stability_threshold_hours).astype(int)
-    
     y_pred_thalf = merged["netmhc_thalf_hours"].values
-    y_pred_score = merged["netmhc_score"].values
-    
-    # 1. Rank & Correlation metrics
-    spearman_thalf, spearman_p = spearmanr(y_true_thalf, y_pred_thalf)
-    pearson_score, pearson_p = pearsonr(y_true_score, y_pred_score)
-    
-    # 2. Regression error
-    rmse_score = float(np.sqrt(mean_squared_error(y_true_score, y_pred_score)))
-    mae_score = float(mean_absolute_error(y_true_score, y_pred_score))
-    
-    # 3. Binary classification metrics (stability >= threshold)
-    has_pos_and_neg = (len(np.unique(y_true_binary)) > 1)
-    if has_pos_and_neg:
-        roc_auc = float(roc_auc_score(y_true_binary, y_pred_score))
-        pr_auc = float(average_precision_score(y_true_binary, y_pred_score))
-    else:
-        roc_auc, pr_auc = 0.5, 0.0
-        
-    metrics = {
-        "n_samples": int(len(merged)),
-        "spearman_rho": float(round(spearman_thalf, 4)),
-        "spearman_pvalue": float(spearman_p),
-        "pearson_r": float(round(pearson_score, 4)),
-        "pearson_pvalue": float(pearson_p),
-        "rmse_stability_score": float(round(rmse_score, 4)),
-        "mae_stability_score": float(round(mae_score, 4)),
-        "roc_auc": float(round(roc_auc, 4)),
-        "pr_auc": float(round(pr_auc, 4)),
-        "stability_threshold_hours": stability_threshold_hours,
-        "merged_dataframe": merged
-    }
-    
+
+    metrics = compute_metrics(
+        y_true_thalf, y_pred_thalf,
+        stability_threshold_hours=stability_threshold_hours
+    )
+    metrics["model"] = "NetMHCstabpan-1.0"
+
+    allele_col = "allele_exp" if "allele_exp" in merged.columns else "allele"
+    if allele_col in merged.columns:
+        metrics["per_allele"] = compute_per_allele_metrics(
+            merged[allele_col].values, y_true_thalf, y_pred_thalf,
+            stability_threshold_hours=stability_threshold_hours
+        )
+
+    metrics["merged_dataframe"] = merged
     return metrics
 
 

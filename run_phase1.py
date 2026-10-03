@@ -29,6 +29,8 @@ def parse_args():
     parser.add_argument("--output-dir", type=str, default="data", help="Root data directory")
     parser.add_argument("--skip-benchmark-query", action="store_true", help="Skip live querying NetMHCstabpan server if results already cached")
     parser.add_argument("--epochs", type=int, default=10, help="Training epochs for baseline neural network")
+    parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3, 4], help="Random seeds for the stochastic baselines; results are reported as mean +/- std")
+    parser.add_argument("--skip-baselines", action="store_true", help="Reuse existing per-row predictions instead of retraining the baselines")
     return parser.parse_args()
 
 
@@ -71,9 +73,35 @@ def main():
     batch_info = prepare_benchmark_batches(test_csv, output_dir=os.path.join(args.output_dir, "netmhcstabpan_benchmark", "batches"))
     logger.info(f"Step 4 Complete: Prepared {len(batch_info['batches'])} batches for server querying.")
 
-    # Step 5: Figures Generation
-    logger.info(">>> STEP 5: Generating publication-quality figures...")
-    os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
+    # Step 5: Baseline models (canonical target, several seeds)
+    os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
+    if args.skip_baselines:
+        logger.info(">>> STEP 5: Skipping baseline training (--skip-baselines).")
+    else:
+        from models.baseline_model import evaluate_baselines_on_all_splits
+        logger.info(
+            ">>> STEP 5: Training baselines on log10(1+thalf) over seeds %s...",
+            args.seeds
+        )
+        evaluate_baselines_on_all_splits(
+            splits_dir=splits_dir, seeds=tuple(args.seeds), epochs=args.epochs
+        )
+        logger.info("Step 5 Complete: baseline metrics and per-row predictions saved.")
+
+    # Step 6: NetMHCstabpan head-to-head on the common evaluation subset
+    from src.head_to_head import run_head_to_head
+    logger.info(">>> STEP 6: Scoring all models on the NetMHCstabpan subset...")
+    h2h = run_head_to_head(
+        test_csv=os.path.join(splits_dir, "unseen_alleles", "test.csv"),
+        netmhc_csv=os.path.join(args.output_dir, "netmhcstabpan_benchmark", "predictions.csv"),
+    )
+    logger.info(
+        "Step 6 Complete: %d pairs across %d alleles compared like-for-like.",
+        h2h["subset"]["n_pairs"], h2h["subset"]["n_alleles"]
+    )
+
+    # Step 7: Figures Generation
+    logger.info(">>> STEP 7: Generating publication-quality figures...")
     from src.evaluate import plot_split_distributions, plot_allele_representation
     plot_split_distributions(os.path.join(splits_dir, "splits_summary.json"), "figures/splits_distribution.png")
     plot_allele_representation(cleaned_csv, "figures/allele_representation.png")
