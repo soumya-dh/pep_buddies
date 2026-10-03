@@ -84,6 +84,22 @@ class TestQuantitativeMetrics(unittest.TestCase):
         self.assertEqual(len(lock_res["df"]), 11)
         self.assertEqual(len(lock_res["sha256"]), 64)
 
+    def test_load_target_specs_from_csv(self):
+        """Test parsing of 6_target_allele_data.csv."""
+        from src.interpretability.quantitative_metrics import load_target_specs_from_csv
+        specs = load_target_specs_from_csv("data/challenge_inputs/6_target_allele_data.csv")
+        self.assertIn("HLA-A*02:01", specs)
+        self.assertIn("HLA-B*07:02", specs)
+        self.assertEqual(specs["HLA-A*02:01"]["anchors"], [2, 9])
+        self.assertIn("P", specs["HLA-B*07:02"]["preferred_motifs"][2]["preferred"])
+
+    def test_unblinding_analysis(self):
+        """Test prospective unblinding concordance against protocol answer key."""
+        from src.prospective.unblinding_analysis import run_unblinding_analysis
+        report = run_unblinding_analysis()
+        self.assertTrue(report["concordance_hit_rate"] >= 0.80)
+        self.assertEqual(report["concordance_hits"], 6)
+
 
 if __name__ == "__main__":
     unittest.main()

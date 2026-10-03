@@ -1,0 +1,7 @@
+HLA allele,Peptide length,Anchor position,Preferred amino acids,Tolerated / secondary residues,Unfavorable residues,Source (name),Confidence
+HLA-A*02:01,9,"P2, P9","P2: L, M; P9: V, L","P2: I, V, A, T; P9: I, A, M, T","P2: D, E, R, K, P; P9: D, E, R, K, P",MHC Motif Atlas / Sarkizova et al. 2020,low
+HLA-A*01:01,9,"P2, P3, P9","P2: T, S; P3: D, E; P9: Y","P2: A, V; P9: F, W","P2: R, K, D, E; P9: P, G, aliphatic",SYFPEITHI / IEDB Motif Viewer,low
+HLA-A*03:01,9,"P2, P9","P2: L, M, V; P9: K, R","P2: I, S, A; P9: Y, F","P2: D, E, P; P9: D, E",Abelin et al. Immunity 2017,low
+HLA-A*24:02,9,"P2, P9","P2: Y, F; P9: L, F, I","P2: W, M; P9: W, M","P2: D, E, K, R; P9: D, E, P",IEDB / Sarkizova et al. 2020,low
+HLA-B*07:02,9,"P2, P9","P2: P (strictly dominant); P9: L, M, V, F","P2: A; P9: I, A","P2: non-prolines strongly penalized; P9: charged (D, E, R, K)",Sarkizova et al. 2020,low
+HLA-B*08:01,9,"P3, P5, P9","P3: R, K; P5: R, K; P9: L, I, V",P3: M; P9: F,"P3/P5: acidic (D, E)",SYFPEITHI / Sarkizova et al. 2020,low

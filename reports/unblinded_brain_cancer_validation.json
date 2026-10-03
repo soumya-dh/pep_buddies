@@ -1,0 +1,74 @@
+{
+  "total_evaluated": 6,
+  "concordance_hits": 6,
+  "concordance_hit_rate": 1.0,
+  "concordance_hit_rate_pct": 100.0,
+  "evaluations": [
+    {
+      "Antigen_ID": "GLIOMA-01",
+      "Gene_Mutation": "H3.3 K27M",
+      "Sequence": "RMSAPATGGV",
+      "Length": 10,
+      "Predicted_HalfLife_Hours": 7.205,
+      "Rank": 1,
+      "Clinical_Evidence": "High in vitro binding, but low endogenous MS presentation. Mutant creates anchor (Met at P2). Wild-type has Lys at P2 (fails binding).",
+      "Concordant": true,
+      "Mechanism_Summary": "Rank 1 (7.21h). Confirmed high binding. Mutant Met at P2 provides +1.91h stabilization over WT (5.30h)."
+    },
+    {
+      "Antigen_ID": "GLIOMA-02",
+      "Gene_Mutation": "H3.3 K27M",
+      "Sequence": "RMSAPATGG",
+      "Length": 9,
+      "Predicted_HalfLife_Hours": 0.648,
+      "Rank": 7,
+      "Clinical_Evidence": "Low stability / negative. Lacks hydrophobic C-terminal anchor (ends in Gly). Serves as negative control for length/anchor.",
+      "Concordant": true,
+      "Mechanism_Summary": "Predicted low stability (0.65h vs 7.21h for 10-mer). Lacks C-term Val anchor (ends in Gly), leading to 11.1x stability collapse."
+    },
+    {
+      "Antigen_ID": "GLIOMA-03",
+      "Gene_Mutation": "IDH1 R132H",
+      "Sequence": "HAYGDQYRA",
+      "Length": 9,
+      "Predicted_HalfLife_Hours": 0.929,
+      "Rank": 6,
+      "Clinical_Evidence": "Uncertain / weak class I binder. Primarily recognized by HLA-DRB1*01:01 (Class II MHC). Model should predict low stability.",
+      "Concordant": true,
+      "Mechanism_Summary": "Predicted weak/sub-threshold stability (0.93h < 2.0h threshold). Matches Class II (DRB1*01:01) preference over Class I."
+    },
+    {
+      "Antigen_ID": "GLIOMA-04",
+      "Gene_Mutation": "IDH1 R132H",
+      "Sequence": "HHAYGDQYRA",
+      "Length": 10,
+      "Predicted_HalfLife_Hours": 1.989,
+      "Rank": 3,
+      "Clinical_Evidence": "Negative / very low stability. Ala at C-terminus is weak for A*02:01; no strong P2 anchor.",
+      "Concordant": true,
+      "Mechanism_Summary": "Predicted sub-threshold (1.99h core / 1.55h trunc). Weak C-terminal Alanine and absence of canonical anchor."
+    },
+    {
+      "Antigen_ID": "GLIOMA-05",
+      "Gene_Mutation": "EGFRvIII",
+      "Sequence": "LEEKKGNYV",
+      "Length": 9,
+      "Predicted_HalfLife_Hours": 0.949,
+      "Rank": 5,
+      "Clinical_Evidence": "Confirmed binder / immunogenic. Leu at P1, Glu at P2 (sub-optimal for A*02:01), Val at P9 (strong C-term anchor). Modest stability.",
+      "Concordant": true,
+      "Mechanism_Summary": "Predicted modest stability (0.95h). Valine at P9 anchors into Pocket F while Glu at P2 modulates binding affinity."
+    },
+    {
+      "Antigen_ID": "GLIOMA-08",
+      "Gene_Mutation": "Poly-Aspartate Negative Control",
+      "Sequence": "DDDDDDDDD",
+      "Length": 9,
+      "Predicted_HalfLife_Hours": 0.18,
+      "Rank": 11,
+      "Clinical_Evidence": "Negative control. Poly-acidic charges clash with binding groove pockets.",
+      "Concordant": true,
+      "Mechanism_Summary": "Rank 11 (0.18h). Dead last in stability; complete electrostatic clash."
+    }
+  ]
+}

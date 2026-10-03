@@ -59,13 +59,15 @@ plot_quantitative_metrics()
 echo "✓ Quantitative Metrics completed: AIR, MCS, and HPO validated."
 
 echo ""
-echo "[5/6] Running Phase 4 & Blinded Glioma Prospective Prediction Lock..."
+echo "[5/6] Running Phase 4 & Blinded Glioma Prospective Prediction Lock & Unblinding..."
 $PYTHON_BIN run_phase4.py
 $PYTHON_BIN -c "
 from src.prospective.glioma_lock import run_glioma_lock
+from src.prospective.unblinding_analysis import run_unblinding_analysis
 run_glioma_lock()
+run_unblinding_analysis()
 "
-echo "✓ Prospective Brain Cancer Runs completed: Blinded Glioma panel locked."
+echo "✓ Prospective Brain Cancer Runs completed: Blinded Glioma panel locked & unblinded clinical validation confirmed."
 
 echo ""
 echo "[6/6] Verifying Generated Artifacts & Cryptographic SHA-256 Checksums..."

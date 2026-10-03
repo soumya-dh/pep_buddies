@@ -36,11 +36,61 @@ from models.baseline_model import (
     AA_TO_IDX,
     one_hot_encode_sequence,
 )
+import re
 from src.hla_database import HLADatabase, MHC_I_PSEUDO_POSITIONS_1BASED
 from src.interpretability.mutation_scan import run_mutation_scan_allele
 from src.interpretability.hla_masking import run_hla_residue_masking
 
 logger = logging.getLogger(__name__)
+
+
+def load_target_specs_from_csv(csv_path: str = "data/challenge_inputs/6_target_allele_data.csv") -> Dict[str, Any]:
+    """Parse anchor positions and motif preferences from 6_target_allele_data.csv."""
+    if not os.path.exists(csv_path):
+        return TARGET_ALLELE_SPECS
+
+    df = pd.read_csv(csv_path)
+
+    def parse_pos_str(s):
+        res = {}
+        if not isinstance(s, str) or pd.isna(s):
+            return res
+        parts = s.split(";")
+        for part in parts:
+            m = re.search(r"P(\d+):\s*([^;]+)", part)
+            if m:
+                pos = int(m.group(1))
+                raw_aas = m.group(2)
+                aas = re.findall(r"\b([ACDEFGHIKLMNPQRSTVWY])\b", raw_aas)
+                res[pos] = aas
+        return res
+
+    specs = {}
+    for _, row in df.iterrows():
+        allele = row["HLA allele"].strip()
+        anchors_str = str(row["Anchor position"])
+        anchors = [int(re.search(r"\d+", p).group(0)) for p in anchors_str.split(",") if re.search(r"\d+", p)]
+        pref = parse_pos_str(row.get("Preferred amino acids", ""))
+        tol = parse_pos_str(row.get("Tolerated / secondary residues", ""))
+
+        motifs = {}
+        for pos in anchors:
+            p_list = pref.get(pos, [])
+            t_list = tol.get(pos, [])
+            motifs[pos] = {
+                "preferred": p_list,
+                "tolerated": t_list,
+                "all": list(dict.fromkeys(p_list + t_list)),
+            }
+        specs[allele] = {
+            "anchors": anchors,
+            "preferred_motifs": motifs,
+            "source": row.get("Source (name)", ""),
+            "confidence": row.get("Confidence", ""),
+            "description": f"From {os.path.basename(csv_path)} ({row.get('Source (name)', '')})",
+        }
+    return specs
+
 
 # Ground truth biological anchor specifications for the 6 core target alleles
 TARGET_ALLELE_SPECS = {
@@ -243,12 +293,18 @@ def run_quantitative_metric_suite(
     df_stability: pd.DataFrame,
     hla_db: HLADatabase,
     device: str = "cpu",
+    target_specs_csv: Optional[str] = "data/challenge_inputs/6_target_allele_data.csv",
     output_path: str = "reports/quantitative_metrics_report.json"
 ) -> Dict[str, Any]:
     """
     Execute the complete 3-metric quantitative evaluation suite across all 6 target alleles.
     """
     logger.info("Starting Quantitative Metric Suite (AIR, MCS, HPO)...")
+    specs_to_use = TARGET_ALLELE_SPECS
+    if target_specs_csv and os.path.exists(target_specs_csv):
+        specs_to_use = load_target_specs_from_csv(target_specs_csv)
+        logger.info(f"Loaded {len(specs_to_use)} target allele specifications from {target_specs_csv}")
+
     results: Dict[str, Any] = {
         "metric_1_air": {},
         "metric_2_mcs": {},
@@ -260,7 +316,7 @@ def run_quantitative_metric_suite(
     allele_mcs_concordance = []
 
     # Evaluate Metric 1 (AIR) and Metric 2 (MCS) across 6 target alleles
-    for allele, spec in TARGET_ALLELE_SPECS.items():
+    for allele, spec in specs_to_use.items():
         sub_df = df_stability[df_stability["allele"] == allele]
         peptides = sub_df["peptide"].unique()[:50].tolist()
         if not peptides:

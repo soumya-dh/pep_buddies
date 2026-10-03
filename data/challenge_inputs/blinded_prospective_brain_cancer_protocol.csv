@@ -1,0 +1,6 @@
+Antigen ID,Gene & mutation,Disease,Peptide length,Peptide window,Full sequence (mutant),Wild-type equivalent,Target HLA,Answer key & clinical evidence,
+GLIOMA-01,H3.3 K27M,DMG/DIPG,10,26-35,RMSAPATGGV,RKSAPATGGV,HLA-A*02:01,"High in vitro binding, but low endogenous MS presentation. Mutant creates anchor (Met at P2). Wild-type has Lys at P2 (fails binding).",
+GLIOMA-02,H3.3 K27M,DMG/DIPG,9,26-34,RMSAPATGG,RKSAPATGG,HLA-A*02:01,Low stability / negative. Lacks hydrophobic C-terminal anchor (ends in Gly). Serves as negative control for length/anchor.,
+GLIOMA-03,IDH1 R132H,LGG/GBM,9,130-138,HAYGDQYRA,RAYGDQYRA,HLA-A*02:01,Uncertain / weak class I binder. Primarily recognized by HLA-DRB1*01:01 (Class II MHC). Model should predict low stability.,
+GLIOMA-04,IDH1 R132H,LGG/GBM,10,129-138,HHAYGDQYRA,HRAYGDQYRA,HLA-A*02:01,Negative / very low stability. Ala at C-terminus is weak for A*02:01; no strong P2 anchor.,
+GLIOMA-05,EGFRvIII,GBM,9,Exon 2-7 junction,LEEKKGNYV,(None - novel junction),HLA-A*02:01,"Confirmed binder / immunogenic. Leu at P1, Glu at P2 (sub-optimal for A*02:01), Val at P9 (strong C-term anchor). Modest stability.",
