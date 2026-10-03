@@ -334,6 +334,16 @@ To reproduce the complete pipeline (Phases 1 through 5) end-to-end:
 ./run_all.sh
 ```
 
+### 🖥️ Live Interactive Streamlit Demo (15-Second Pitch Demo)
+Launch the interactive web demo for live screen-sharing and real-time judge peptide queries:
+```bash
+streamlit run app.py
+```
+- **Instant Predictions**: Real-time complex half-life ($T_{1/2}$ hours) and stability classification badges.
+- **Pre-Loaded Clinical Presets**: H3.3 K27M mutant ($0.82\text{ h}$) vs wild-type ($0.50\text{ h}$), EGFRvIII ($0.95\text{ h}$), IL13R$\alpha$2 ($0.62\text{ h}$), and negative controls.
+- **In Silico Deep Mutational Scanning**: Real-time per-position sensitivity bar chart highlighting canonical anchor positions (P2 and P9).
+- **Automated Biophysical Rationale**: Dynamic structural explanations (e.g., Pocket B hydrophobic accommodation vs. Lysine charge clash).
+
 ### 🔬 Run Phase-by-Phase
 
 #### 1. Run Automated Unit Tests (36 tests)

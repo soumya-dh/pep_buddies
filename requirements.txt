@@ -16,3 +16,7 @@ sentencepiece>=0.1.99
 
 # NetMHCstabpan querying uses urllib from the standard library, so no HTTP
 # dependency is needed here.
+
+# Interactive Demo (Streamlit)
+streamlit>=1.30
+altair>=5.0
