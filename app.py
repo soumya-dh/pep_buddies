@@ -30,7 +30,6 @@ from src.visualization.structure_viewer import build_pmhc_pdb, generate_3dmol_ht
 # Page Configuration
 st.set_page_config(
     page_title="PepBuddies | HLA Stability",
-    page_icon="🧬",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -38,21 +37,29 @@ st.set_page_config(
 # Sleek Minimalist Theme CSS
 st.markdown("""
 <style>
+    /* Fix header clash: ensure block-container sits cleanly below Streamlit top header */
+    header[data-testid="stHeader"] {
+        height: 2.75rem;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid #f1f5f9;
+        z-index: 99;
+    }
     .block-container {
-        padding-top: 1.2rem;
-        padding-bottom: 1.5rem;
+        padding-top: 4.5rem !important;
+        padding-bottom: 2rem !important;
         max-width: 1400px;
     }
     .nav-bar {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding-bottom: 8px;
-        margin-bottom: 14px;
+        padding-bottom: 12px;
+        margin-bottom: 18px;
         border-bottom: 1px solid #e2e8f0;
     }
     .brand-title {
-        font-size: 1.65rem;
+        font-size: 1.55rem;
         font-weight: 800;
         color: #0f172a;
         margin: 0;
@@ -62,7 +69,9 @@ st.markdown("""
         gap: 8px;
     }
     .pill {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
         padding: 3px 9px;
         border-radius: 9999px;
         font-size: 0.72rem;
@@ -186,9 +195,9 @@ PROTEIN_SCAN_PRESETS = {
 }
 
 # -------------------------------------------------------------
-# Sidebar: Controls First
+# Sidebar: Setup & Presets
 # -------------------------------------------------------------
-st.sidebar.markdown("### 🎛️ Setup")
+st.sidebar.markdown("### Setup")
 
 if "preset_dropdown" not in st.session_state:
     st.session_state.preset_dropdown = list(PRESETS.keys())[0]
@@ -227,15 +236,15 @@ selected_allele = st.sidebar.selectbox(
 st.sidebar.markdown("**Quick Demos:**")
 c_sb1, c_sb2 = st.sidebar.columns(2)
 with c_sb1:
-    st.button("⚡ K27M", on_click=set_preset_callback, args=("H3.3 K27M (9-mer)",), use_container_width=True)
+    st.button("K27M", on_click=set_preset_callback, args=("H3.3 K27M (9-mer)",), use_container_width=True)
 with c_sb2:
-    st.button("🛡️ H3.3 WT", on_click=set_preset_callback, args=("H3.3 WT (9-mer)",), use_container_width=True)
+    st.button("H3.3 WT", on_click=set_preset_callback, args=("H3.3 WT (9-mer)",), use_container_width=True)
 
 c_sb3, c_sb4 = st.sidebar.columns(2)
 with c_sb3:
-    st.button("🧬 EGFRvIII", on_click=set_preset_callback, args=("EGFRvIII (9-mer)",), use_container_width=True)
+    st.button("EGFRvIII", on_click=set_preset_callback, args=("EGFRvIII (9-mer)",), use_container_width=True)
 with c_sb4:
-    st.button("⛔ Poly-D", on_click=set_preset_callback, args=("Poly-D Control",), use_container_width=True)
+    st.button("Poly-D", on_click=set_preset_callback, args=("Poly-D Control",), use_container_width=True)
 
 with st.sidebar.expander("Model Specs", expanded=False):
     st.markdown("""
@@ -249,17 +258,18 @@ with st.sidebar.expander("Model Specs", expanded=False):
 
 
 # -------------------------------------------------------------
-# Clean Top Navbar
+# Clean Top Navbar (Icons & Zero Clash)
 # -------------------------------------------------------------
 st.markdown("""
 <div class="nav-bar">
     <div class="brand-title">
-        🧬 PepBuddies
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: -3px;"><path d="M2 15c6.667-6 13.333 0 20-6"/><path d="M9 22c1.798-1.998 2.518-3.995 2.807-5.993"/><path d="M15 2c-1.798 1.998-2.518 3.995-2.807 5.993"/><path d="M17 6l-2.5-2.5"/><path d="M14 8l-1-1"/><path d="M7 18l2.5 2.5"/><path d="M3.5 14.5l.5.5"/><path d="M20 9.5l.5.5"/><path d="M6.5 12.5l1 1"/><path d="M16.5 10.5l1 1"/><path d="M10 16l1.5 1.5"/></svg>
+        PepBuddies
         <span class="pill pill-blue">v1.0-locked</span>
     </div>
-    <div style="display: flex; gap: 8px;">
+    <div style="display: flex; gap: 8px; align-items: center;">
         <span class="pill pill-blue">Track 3: Biology & Health</span>
-        <span class="pill pill-green">⚡ < 0.8 ms</span>
+        <span class="pill pill-green"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 3px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>&lt; 0.8 ms</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -383,14 +393,14 @@ def run_prediction_and_scan(sequence: str, allele: str) -> Dict[str, Any]:
 
 
 # -------------------------------------------------------------
-# Main Tabs
+# Main Tabs (Clean Text, No Emojis)
 # -------------------------------------------------------------
 tab_single, tab_scan, tab_patient, tab_bench, tab_batch = st.tabs([
-    "🔬 Single Candidate",
-    "🧬 Protein Tiling Scan",
-    "👤 Patient Screener",
-    "📊 Benchmarks",
-    "📁 Batch Screen",
+    "Single Candidate",
+    "Protein Tiling Scan",
+    "Patient Screener",
+    "Benchmarks",
+    "Batch Screen",
 ])
 
 
@@ -406,7 +416,7 @@ with tab_single:
             wt_in = st.text_input("Wild-Type (Optional):", key="wt_input_box").strip().upper()
         with c3:
             st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-            run_btn = st.form_submit_button("⚡ Predict", type="primary", use_container_width=True)
+            run_btn = st.form_submit_button("Predict", type="primary", use_container_width=True)
 
     if pep_in:
         bad_chars = [c for c in pep_in if c not in AMINO_ACIDS]
@@ -420,11 +430,11 @@ with tab_single:
             th, s_th = res["thalf"], res["std"]
 
             if th >= 2.0:
-                v_badge = '<span class="pill pill-green">🟢 STABLE (≥2.0h)</span>'
+                v_badge = '<span class="pill pill-green">STABLE (≥2.0h)</span>'
             elif th >= 0.7:
-                v_badge = '<span class="pill pill-yellow">🟡 MODEST (0.7-2.0h)</span>'
+                v_badge = '<span class="pill pill-yellow">MODEST (0.7-2.0h)</span>'
             else:
-                v_badge = '<span class="pill pill-red">🔴 UNSTABLE (<0.7h)</span>'
+                v_badge = '<span class="pill pill-red">UNSTABLE (<0.7h)</span>'
 
             # Metric Cards
             m1, m2, m3, m4 = st.columns([1.2, 1.2, 1.2, 1.4])
@@ -436,7 +446,7 @@ with tab_single:
                 st.markdown(v_badge, unsafe_allow_html=True)
 
             if res["del_pos"]:
-                st.info(f"ℹ️ 10-mer Core: Bulge deletion at pos {res['del_pos']} (optimal 9-mer core: `{res['eval_seq']}`).")
+                st.info(f"10-mer Core: Bulge deletion at pos {res['del_pos']} (optimal 9-mer core: `{res['eval_seq']}`).")
 
             # Paired WT Comparison
             if wt_in and all(c in AMINO_ACIDS for c in wt_in) and len(wt_in) in [9, 10]:
@@ -449,7 +459,7 @@ with tab_single:
                 if overlap and fc >= 1.4:
                     v_text += " (Suggestive)"
 
-                with st.expander(f"⚖️ WT Comparison: Mutant {th:.2f}h vs WT {wt_res['thalf']:.2f}h ({v_text})", expanded=True):
+                with st.expander(f"WT Comparison: Mutant {th:.2f}h vs WT {wt_res['thalf']:.2f}h ({v_text})", expanded=True):
                     w1, w2, w3, w4 = st.columns(4)
                     w1.metric("Mutant T½", f"{th:.2f} ± {s_th:.2f} h")
                     w2.metric("Wild-Type T½", f"{wt_res['thalf']:.2f} ± {wt_res['std']:.2f} h")
@@ -463,7 +473,7 @@ with tab_single:
                 gain = (th / max(wt_chk["thalf"], 1e-4) - 1) * 100
                 st.markdown(f"""
                 <div class="card" style="border-left: 3px solid #2563eb; background: #f8fafc; font-size: 0.86rem; line-height: 1.4;">
-                    <b>💡 K27M Mechanism ({gain:+.0f}% Stability Gain):</b><br>
+                    <b>K27M Mechanism ({gain:+.0f}% Stability Gain):</b><br>
                     • <b>Pocket B:</b> Met27 packs hydrophobic pocket ({th:.2f}h), relieving Lys27 clash with Val67 ({wt_chk['thalf']:.2f}h).<br>
                     • <b>Pocket F:</b> Gly9 lacks anchor, keeping affinity intermediate (consistent with clinical presentation).
                 </div>
@@ -528,7 +538,7 @@ with tab_single:
 
                 # Pocket B / F Summary Card
                 p2, p9 = eval_seq[1], eval_seq[-1]
-                with st.expander("🔬 Pocket Anchors", expanded=False):
+                with st.expander("Pocket Anchors", expanded=False):
                     st.markdown(f"""
                     • **Pocket B (P2 = `{p2}`):** {'Optimal packing (Met45, Ala24, Val67)' if p2 in ['L','M'] else 'Secondary match' if p2 in ['I','V','A','T'] else 'Clash' if p2 in ['K','R'] else 'Sub-optimal'}<br>
                     • **Pocket F (P9 = `{p9}`):** {'Hydrophobic anchor (Thr80, Tyr116, Trp147)' if p9 in ['V','L','I','F','M'] else 'Missing anchor penalty' if p9 == 'G' else 'Charge clash' if p9 in ['K','R','D','E'] else 'Tolerated'}
@@ -550,10 +560,10 @@ with tab_single:
                 except Exception as e:
                     st.error(f"3D error: {e}")
 
-                st.markdown("<div style='font-size: 0.75rem; color: #94a3b8; text-align: center;'>PDB 1DUZ template | 🟦 P2 | 🟧 P9 | 🟩 Peptide | 🪨 HLA</div>", unsafe_allow_html=True)
+                st.markdown("<div style='font-size: 0.75rem; color: #64748b; text-align: center;'>PDB 1DUZ template &nbsp;|&nbsp; <span style='color:#2563eb; font-weight:700;'>■</span> P2 &nbsp;|&nbsp; <span style='color:#ea580c; font-weight:700;'>■</span> P9 &nbsp;|&nbsp; <span style='color:#16a34a; font-weight:700;'>■</span> Peptide &nbsp;|&nbsp; <span style='color:#94a3b8; font-weight:700;'>■</span> HLA</div>", unsafe_allow_html=True)
 
             # Cross-Allele Screen (Inside Tab 1)
-            with st.expander("🌐 Cross-Allele Screen", expanded=False):
+            with st.expander("Cross-Allele Specificity", expanded=False):
                 ca_rows = []
                 for al in COMMON_ALLELES:
                     ps = hla_db.get_pseudosequence(al)
@@ -675,11 +685,11 @@ with tab_scan:
                     def view_3d_callback(peptide_seq: str, allele_val: str):
                         st.session_state.pep_input_box = peptide_seq
                         st.session_state.allele_selector = allele_val
-                    st.button("🔬 View in 3D", on_click=view_3d_callback, args=(s_top, s_allele), use_container_width=True)
+                    st.button("View in 3D", on_click=view_3d_callback, args=(s_top, s_allele), use_container_width=True)
 
                 csv_buf = io.StringIO()
                 df_t.to_csv(csv_buf, index=False)
-                st.download_button("📥 CSV", data=csv_buf.getvalue(), file_name=f"tiling_{s_allele}.csv", mime="text/csv", use_container_width=True)
+                st.download_button("Export CSV", data=csv_buf.getvalue(), file_name=f"tiling_{s_allele}.csv", mime="text/csv", use_container_width=True)
 
 
 # =============================================================
@@ -711,11 +721,11 @@ with tab_patient:
             best_pt = df_pt.sort_values(by="T½ (h)", ascending=False).iloc[0]
 
             if best_pt["T½ (h)"] >= 2.0:
-                st.markdown(f'<span class="pill pill-green">🟢 ELIGIBLE: Presented on {best_pt["Allele"]} ({best_pt["T½ (h)"]} h)</span>', unsafe_allow_html=True)
+                st.markdown(f'<span class="pill pill-green">ELIGIBLE: Presented on {best_pt["Allele"]} ({best_pt["T½ (h)"]} h)</span>', unsafe_allow_html=True)
             elif any(r["T½ (h)"] >= 0.7 for r in pt_rows):
-                st.markdown(f'<span class="pill pill-yellow">🟡 MODERATE: Intermediate presentation on {best_pt["Allele"]} ({best_pt["T½ (h)"]} h)</span>', unsafe_allow_html=True)
+                st.markdown(f'<span class="pill pill-yellow">MODERATE: Intermediate presentation on {best_pt["Allele"]} ({best_pt["T½ (h)"]} h)</span>', unsafe_allow_html=True)
             else:
-                st.markdown(f'<span class="pill pill-red">🔴 INELIGIBLE: Unstable on all tested alleles</span>', unsafe_allow_html=True)
+                st.markdown(f'<span class="pill pill-red">INELIGIBLE: Unstable across all tested alleles</span>', unsafe_allow_html=True)
 
             pt_chart = (
                 alt.Chart(df_pt)
@@ -781,7 +791,7 @@ with tab_bench:
         with hy1:
             st.markdown("""
             <div class="card" style="border-left: 3px solid #0284c7; font-size: 0.86rem; line-height: 1.45;">
-                <b>🔬 Allele-Offset Error Reduction:</b><br>
+                <b>Allele-Offset Error Reduction:</b><br>
                 • <b>Offset Error:</b> Slashed from 40.7% down to <b>18.8%</b> (&gt;50% reduction).<br>
                 • <b>Unseen Alleles:</b> Ranking correlation boosted from ρ = 0.091 → <b>0.247</b>.<br>
                 • <b>Unseen Peptides:</b> Preserves high stability correlation (ρ = <b>0.585</b>).
@@ -790,7 +800,7 @@ with tab_bench:
         with hy2:
             st.markdown("""
             <div class="card" style="font-size: 0.86rem; line-height: 1.45;">
-                <b>📐 Structural Design:</b><br>
+                <b>Structural Design:</b><br>
                 • <b>Peptide:</b> Discrete positional one-hot encoding preserves anchor indexing.<br>
                 • <b>HLA:</b> Continuous ESM-2 35M G-domain captures receptor homology.
             </div>
@@ -801,15 +811,15 @@ with tab_bench:
         if os.path.exists("glioma_prospective_predictions.csv"):
             with open("glioma_prospective_predictions.csv", "rb") as f:
                 d_hash = hashlib.sha256(f.read()).hexdigest()
-            st.markdown(f'<span class="pill pill-green">🔐 SHA-256 Verified: {d_hash[:16]}... (Commit a4df075, locked prior to unblinding)</span>', unsafe_allow_html=True)
+            st.markdown(f'<span class="pill pill-green"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>SHA-256 Verified: {d_hash[:16]}... (Commit a4df075, locked prior to unblinding)</span>', unsafe_allow_html=True)
 
         df_pr = pd.DataFrame([
-            {"Target": "GLIOMA-01", "Target / Mutation": "H3.3 K27M (10-mer)", "Sequence": "RMSAPATGGV", "T½": "7.21 h", "Match Rule": "T½ ≥ 2.0h, Rank 1", "Concordance": "✓ High Stability"},
-            {"Target": "GLIOMA-02", "Target / Mutation": "H3.3 K27M Control (9-mer)", "Sequence": "RMSAPATGG", "T½": "0.65 h", "Match Rule": "T½ < 1.0h", "Concordance": "✓ Negative Control"},
-            {"Target": "GLIOMA-03", "Target / Mutation": "IDH1 R132H (9-mer)", "Sequence": "HAYGDQYRA", "T½": "0.93 h", "Match Rule": "T½ < 1.5h", "Concordance": "✓ Sub-threshold"},
-            {"Target": "GLIOMA-04", "Target / Mutation": "IDH1 R132H (10-mer)", "Sequence": "HHAYGDQYRA", "T½": "1.99 h", "Match Rule": "T½ < 2.0h", "Concordance": "✓ Borderline Sub-threshold"},
-            {"Target": "GLIOMA-05", "Target / Mutation": "EGFRvIII Junction (9-mer)", "Sequence": "LEEKKGNYV", "T½": "0.95 h", "Match Rule": "0.7h ≤ T½ ≤ 2.5h", "Concordance": "✓ Modest Binder"},
-            {"Target": "GLIOMA-08", "Target / Mutation": "Poly-D Control", "Sequence": "DDDDDDDDD", "T½": "0.18 h", "Match Rule": "T½ < 0.5h (Dead last)", "Concordance": "✓ Negative Control"},
+            {"Target": "GLIOMA-01", "Target / Mutation": "H3.3 K27M (10-mer)", "Sequence": "RMSAPATGGV", "T½": "7.21 h", "Match Rule": "T½ ≥ 2.0h, Rank 1", "Concordance": "Concordant (High Stability)"},
+            {"Target": "GLIOMA-02", "Target / Mutation": "H3.3 K27M Control (9-mer)", "Sequence": "RMSAPATGG", "T½": "0.65 h", "Match Rule": "T½ < 1.0h", "Concordance": "Concordant (Negative Control)"},
+            {"Target": "GLIOMA-03", "Target / Mutation": "IDH1 R132H (9-mer)", "Sequence": "HAYGDQYRA", "T½": "0.93 h", "Match Rule": "T½ < 1.5h", "Concordance": "Concordant (Sub-threshold)"},
+            {"Target": "GLIOMA-04", "Target / Mutation": "IDH1 R132H (10-mer)", "Sequence": "HHAYGDQYRA", "T½": "1.99 h", "Match Rule": "T½ < 2.0h", "Concordance": "Concordant (Borderline Sub-threshold)"},
+            {"Target": "GLIOMA-05", "Target / Mutation": "EGFRvIII Junction (9-mer)", "Sequence": "LEEKKGNYV", "T½": "0.95 h", "Match Rule": "0.7h ≤ T½ ≤ 2.5h", "Concordance": "Concordant (Modest Binder)"},
+            {"Target": "GLIOMA-08", "Target / Mutation": "Poly-D Control", "Sequence": "DDDDDDDDD", "T½": "0.18 h", "Match Rule": "T½ < 0.5h (Dead last)", "Concordance": "Concordant (Negative Control)"},
         ])
         st.dataframe(df_pr, use_container_width=True)
 
@@ -818,14 +828,14 @@ with tab_bench:
         u1, u2 = st.columns(2, gap="medium")
         u1.markdown("""
         <div class="card" style="border-left: 3px solid #16a34a;">
-            <div style="font-weight: 700; color: #166534; font-size: 0.9rem;">✅ MC-Dropout (σ)</div>
+            <div style="font-weight: 700; color: #166534; font-size: 0.9rem;">MC-Dropout Uncertainty (σ)</div>
             <div style="font-size: 1.3rem; font-weight: 800; color: #15803d; margin: 4px 0;">AUROC = 0.7170</div>
             <div style="color: #475569; font-size: 0.84rem;">ρ = +0.2764 (p = 9.24 × 10⁻⁶). Statistically validated error detector.</div>
         </div>
         """, unsafe_allow_html=True)
         u2.markdown("""
         <div class="card" style="border-left: 3px solid #dc2626;">
-            <div style="font-weight: 700; color: #991b1b; font-size: 0.9rem;">⚠️ Inverted AIR (-AIR)</div>
+            <div style="font-weight: 700; color: #991b1b; font-size: 0.9rem;">Inverted Attribution (-AIR)</div>
             <div style="font-size: 1.3rem; font-weight: 800; color: #b91c1c; margin: 4px 0;">AUROC = 0.4745</div>
             <div style="color: #475569; font-size: 0.84rem;">Near random chance (p = 0.45). Explanations confirm biophysics, not error filter.</div>
         </div>
@@ -840,7 +850,7 @@ with tab_batch:
 
     with bt_l:
         st.markdown("**Batch Screening**")
-        load_demo = st.button("⚡ Load 6-Target Library", type="primary", use_container_width=True)
+        load_demo = st.button("Load 6-Target Library", type="primary", use_container_width=True)
         up_file = st.file_uploader("Upload CSV:", type=["csv"])
 
         t_df = pd.DataFrame({
@@ -849,7 +859,7 @@ with tab_batch:
         })
         b_buf = io.StringIO()
         t_df.to_csv(b_buf, index=False)
-        st.download_button("📄 Template CSV", data=b_buf.getvalue(), file_name="sample.csv", mime="text/csv", use_container_width=True)
+        st.download_button("Template CSV", data=b_buf.getvalue(), file_name="sample.csv", mime="text/csv", use_container_width=True)
 
     with bt_r:
         df_proc = t_df.copy() if load_demo else pd.read_csv(up_file) if up_file else None
@@ -903,6 +913,6 @@ with tab_batch:
 
                 exp_buf = io.StringIO()
                 b_df.to_csv(exp_buf, index=False)
-                st.download_button("📥 Export CSV", data=exp_buf.getvalue(), file_name="batch_screening.csv", mime="text/csv")
+                st.download_button("Export CSV", data=exp_buf.getvalue(), file_name="batch_screening.csv", mime="text/csv")
         else:
-            st.info("👈 Click 'Load 6-Target Library' or upload a CSV.")
+            st.info("Click 'Load 6-Target Library' or upload a CSV to test batch screening.")
