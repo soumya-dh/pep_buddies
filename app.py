@@ -205,14 +205,20 @@ def handle_preset_change():
     st.session_state.wt_input_box = PRESETS[p].get("wt_sequence", "")
     st.session_state.allele_selector = PRESETS[p]["allele"]
 
-st.sidebar.selectbox(
+def set_preset_callback(p_name: str):
+    st.session_state.preset_dropdown = p_name
+    st.session_state.pep_input_box = PRESETS[p_name]["sequence"]
+    st.session_state.wt_input_box = PRESETS[p_name].get("wt_sequence", "")
+    st.session_state.allele_selector = PRESETS[p_name]["allele"]
+
+selected_preset = st.sidebar.selectbox(
     "Preset:",
     list(PRESETS.keys()),
     key="preset_dropdown",
     on_change=handle_preset_change,
 )
 
-st.sidebar.selectbox(
+selected_allele = st.sidebar.selectbox(
     "Target Allele:",
     COMMON_ALLELES,
     key="allele_selector",
@@ -221,27 +227,15 @@ st.sidebar.selectbox(
 st.sidebar.markdown("**Quick Demos:**")
 c_sb1, c_sb2 = st.sidebar.columns(2)
 with c_sb1:
-    if st.button("⚡ K27M", use_container_width=True):
-        st.session_state.preset_dropdown = "H3.3 K27M (9-mer)"
-        handle_preset_change()
-        st.rerun()
+    st.button("⚡ K27M", on_click=set_preset_callback, args=("H3.3 K27M (9-mer)",), use_container_width=True)
 with c_sb2:
-    if st.button("🛡️ H3.3 WT", use_container_width=True):
-        st.session_state.preset_dropdown = "H3.3 WT (9-mer)"
-        handle_preset_change()
-        st.rerun()
+    st.button("🛡️ H3.3 WT", on_click=set_preset_callback, args=("H3.3 WT (9-mer)",), use_container_width=True)
 
 c_sb3, c_sb4 = st.sidebar.columns(2)
 with c_sb3:
-    if st.button("🧬 EGFRvIII", use_container_width=True):
-        st.session_state.preset_dropdown = "EGFRvIII (9-mer)"
-        handle_preset_change()
-        st.rerun()
+    st.button("🧬 EGFRvIII", on_click=set_preset_callback, args=("EGFRvIII (9-mer)",), use_container_width=True)
 with c_sb4:
-    if st.button("⛔ Poly-D", use_container_width=True):
-        st.session_state.preset_dropdown = "Poly-D Control"
-        handle_preset_change()
-        st.rerun()
+    st.button("⛔ Poly-D", on_click=set_preset_callback, args=("Poly-D Control",), use_container_width=True)
 
 with st.sidebar.expander("Model Specs", expanded=False):
     st.markdown("""
@@ -517,13 +511,20 @@ with tab_single:
                 if res["top_opts"]:
                     st.markdown("<div style='font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 4px;'>OPTIMIZATION CANDIDATES (CLICK TO TEST):</div>", unsafe_allow_html=True)
                     opt_c = st.columns(len(res["top_opts"]))
+                    def apply_opt_callback(new_seq: str):
+                        st.session_state.pep_input_box = new_seq
                     for idx, opt in enumerate(res["top_opts"]):
+                        seq_l = list(eval_seq)
+                        seq_l[opt["pos"]] = opt["new_aa"]
+                        mut_seq = "".join(seq_l)
                         with opt_c[idx]:
-                            if st.button(f"{opt['label']} ({opt['thalf']:.1f}h)", key=f"opt_{idx}_{eval_seq}", use_container_width=True):
-                                seq_l = list(eval_seq)
-                                seq_l[opt["pos"]] = opt["new_aa"]
-                                st.session_state.pep_input_box = "".join(seq_l)
-                                st.rerun()
+                            st.button(
+                                f"{opt['label']} ({opt['thalf']:.1f}h)",
+                                key=f"opt_{idx}_{eval_seq}",
+                                on_click=apply_opt_callback,
+                                args=(mut_seq,),
+                                use_container_width=True,
+                            )
 
                 # Pocket B / F Summary Card
                 p2, p9 = eval_seq[1], eval_seq[-1]
@@ -671,10 +672,10 @@ with tab_scan:
                 top_opts = f_df.sort_values(by="T½ (h)", ascending=False)["Peptide"].tolist()[:5]
                 if top_opts:
                     s_top = st.selectbox("Inspect:", top_opts)
-                    if st.button("🔬 View in 3D", use_container_width=True):
-                        st.session_state.pep_input_box = s_top
-                        st.session_state.allele_selector = s_allele
-                        st.rerun()
+                    def view_3d_callback(peptide_seq: str, allele_val: str):
+                        st.session_state.pep_input_box = peptide_seq
+                        st.session_state.allele_selector = allele_val
+                    st.button("🔬 View in 3D", on_click=view_3d_callback, args=(s_top, s_allele), use_container_width=True)
 
                 csv_buf = io.StringIO()
                 df_t.to_csv(csv_buf, index=False)
