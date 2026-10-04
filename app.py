@@ -1250,20 +1250,22 @@ with tab_benchmark:
                 st.error(f"Hash mismatch: `{computed_hash}` vs `{expected_hash}`")
 
     st.markdown("""
-    **Pre-Registered Biophysical Match Rules & Concordance Breakdown:**
+    **Explicit Match Rules Applied at Unblinding to Locked Predictions (Commit `a4df075`):**
 
-    | Target ID | Mutation & Role | Length | Sequence | Pred $T_{1/2}$ | Explicit Pre-Registered Match Rule | Clinical Verdict |
+    | Target ID | Mutation & Role | Length | Sequence | Pred $T_{1/2}$ | Explicit Match Rule at Unblinding | Clinical Verdict |
     | :--- | :--- | :---: | :--- | :---: | :--- | :---: |
-    | **GLIOMA-01** | H3.3 K27M Flagship | 10 | `RMSAPATGGV` | **7.21 h** | $T_{1/2} \ge 2.0\text{ h}$ (Stable), Rank 1, and $T_{1/2,\text{mut}} > T_{1/2,\text{wt}}$ ($+1.91\text{ h}$) | **Concordant ✓** |
+    | **GLIOMA-01** | H3.3 K27M Flagship | 10 | `RMSAPATGGV` | **7.21 h** | $T_{1/2} \ge 2.0\text{ h}$ (Stable Presentation), Rank 1, and $T_{1/2,\text{mut}} > T_{1/2,\text{wt}}$ ($+1.91\text{ h}$) | **Concordant ✓** |
     | **GLIOMA-02** | H3.3 K27M Anchor Control | 9 | `RMSAPATGG` | **0.65 h** | $T_{1/2} < 1.0\text{ h}$ (Negative length/anchor control; lacks C-term anchor) | **Concordant ✓** |
     | **GLIOMA-03** | IDH1 R132H | 9 | `HAYGDQYRA` | **0.93 h** | $T_{1/2} < 1.5\text{ h}$ (Sub-threshold for Class I presentation; primarily HLA-DR Class II) | **Concordant ✓** |
-    | **GLIOMA-04** | IDH1 R132H | 10 | `HHAYGDQYRA` | **1.99 h** | $T_{1/2} < 2.0\text{ h}$ (Sub-threshold for stable presentation; weak Ala C-terminus) | **Concordant ✓** |
+    | **GLIOMA-04** | IDH1 R132H | 10 | `HHAYGDQYRA` | **1.99 h** | $T_{1/2} < 2.0\text{ h}$ (Borderline: 1.99 h sits right at 2.0 h cutoff; sub-threshold for strong presentation) | **Concordant ✓ (Borderline)** |
     | **GLIOMA-05** | EGFRvIII Novel Junction | 9 | `LEEKKGNYV` | **0.95 h** | $0.7\text{ h} \le T_{1/2} \le 2.5\text{ h}$ (Modest presentation band; Val P9 rescues Glu P2) | **Concordant ✓** |
     | **GLIOMA-08** | Poly-Aspartate Control | 9 | `DDDDDDDDD` | **0.18 h** | $T_{1/2} < 0.5\text{ h}$ (Dead last negative control; severe poly-acidic clash) | **Concordant ✓** |
 
-    *Reconciliation of Table Rows:* The prospective predictions file contains 11 rows (pairing WT baselines and candidate lengths), while the organizers' blinded protocol specifies 6 clinical evaluation benchmarks (GLIOMA-01 to 05, and negative control GLIOMA-08). Every target satisfies its pre-registered clinical threshold.
-    
-    *10-Mer Bulge Core Preservation:* For decamer `RMSAPATGGV` vs WT `RKSAPATGGV`, the dynamic bulge alignment selects core `RMSPATGGV` vs `RKSPATGGV` (deleting internal Ala at pos 3). Crucially, the deletion removes a non-anchor position and **preserves the P2 anchor intact** (Met in mutant vs Lys in WT), preserving the biological mechanism.
+    *Reconciliation of Table Rows:* The locked prospective file contains 11 rows (pairing WT baselines and candidate lengths), while the organizers' protocol specifies 6 clinical evaluation benchmarks (GLIOMA-01 to 05, and negative control GLIOMA-08).
+
+    *10-Mer Bulge Core Preservation & WT Anchor Rescue:*
+    - **Bulge Alignment:** For decamer `RMSAPATGGV` vs WT `RKSAPATGGV`, crystallographic bulge alignment selects core `RMSPATGGV` vs `RKSPATGGV` (deleting internal Ala at position 4, index 3). Crucially, the deletion removes a non-anchor position and **preserves the P2 anchor intact** (Met in mutant vs Lys in WT).
+    - **WT 10-Mer Stability:** WT decamer `RKSAPATGGV` predicts as stable (5.30 h) because the strong C-terminal hydrophobic Val anchor rescues both 10-mers. The K27M mutation still adds a substantial $+1.91\text{ h}$ (+36%) gain. The clean, unassisted P2 electrostatic clash is most starkly seen in the 9-mer (`RMSAPSTGG` 0.82 h vs `RKSAPSTGG` 0.50 h, +64%), where Pocket B is the primary stabilizing contact.
     """)
 
     # AIR-AUROC Uncertainty Diagnostic Card

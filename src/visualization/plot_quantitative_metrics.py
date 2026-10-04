@@ -140,7 +140,7 @@ def plot_quantitative_metrics(
     hpo_score = hpo_data["hpo_pct"]
     overlap_cnt = hpo_data["overlap_count"]
     ax_hpo.set_title(
-        f"Metric 3: HLA Pocket Overlap (HPO)\n{overlap_cnt}/20 Overlap = {hpo_score:.1f}% (Chance = 10.5%)",
+        f"Metric 3: HLA Pocket Overlap (HPO)\n{overlap_cnt}/20 Overlap = {hpo_score:.1f}% (34-Input Null = 50.0%, 1.30x)",
         fontweight="bold"
     )
 

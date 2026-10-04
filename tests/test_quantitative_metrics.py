@@ -78,11 +78,24 @@ class TestQuantitativeMetrics(unittest.TestCase):
 
     def test_glioma_lock_execution_and_hash(self):
         """Verify execution of glioma prospective lock and hash verification."""
-        lock_res = run_glioma_lock(output_csv="glioma_prospective_predictions.csv")
-        self.assertTrue(os.path.exists("glioma_prospective_predictions.csv"))
-        self.assertTrue(os.path.exists("glioma_prospective_predictions.csv.sha256"))
-        self.assertEqual(len(lock_res["df"]), 11)
-        self.assertEqual(len(lock_res["sha256"]), 64)
+        temp_csv = "test_glioma_predictions_temp.csv"
+        try:
+            lock_res = run_glioma_lock(output_csv=temp_csv)
+            self.assertTrue(os.path.exists(temp_csv))
+            self.assertTrue(os.path.exists(temp_csv + ".sha256"))
+            self.assertEqual(len(lock_res["df"]), 11)
+            self.assertEqual(len(lock_res["sha256"]), 64)
+        finally:
+            for p in [temp_csv, temp_csv + ".sha256",
+                      os.path.join(os.path.dirname(os.path.dirname(__file__)), "predictions", temp_csv),
+                      os.path.join(os.path.dirname(os.path.dirname(__file__)), "predictions", temp_csv + ".sha256"),
+                      os.path.join("predictions", temp_csv),
+                      os.path.join("predictions", temp_csv + ".sha256")]:
+                if os.path.exists(p):
+                    try:
+                        os.remove(p)
+                    except OSError:
+                        pass
 
     def test_load_target_specs_from_csv(self):
         """Test parsing of 6_target_allele_data.csv."""
